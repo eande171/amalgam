@@ -14,6 +14,7 @@ PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 
 class PluginController:
     def __init__(self):
+        self.active_plugin = None
         self.plugins = {}
 
     def load_plugins(self):
@@ -33,6 +34,42 @@ class PluginController:
 
                 self.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
 
+    def set_active_plugin(self, identifier):
+        if identifier in self.plugins:
+            self.active_plugin = self.plugins[identifier]
+        else:
+            raise ValueError(f"Plugin with identifier '{identifier}' not found.")
+        
+    def get_active_identifier(self):
+        if self.active_plugin:
+            return self.active_plugin.get_identifier(self.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+        
+    def get_active_description(self):
+        if self.active_plugin:
+            return self.active_plugin.get_description(self.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+        
+    def active_startup(self):
+        if self.active_plugin:
+            self.active_plugin.startup(self.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+        
+    def active_execute(self):
+        if self.active_plugin:
+            self.active_plugin.execute(self.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+        
+    def active_shutdown(self):
+        if self.active_plugin:
+            self.active_plugin.shutdown(self.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+
     def get_plugin(self, identifier):
         if identifier in self.plugins:
             return self.plugins[identifier]
@@ -45,14 +82,12 @@ def main():
     controller = PluginController()
     controller.load_plugins()
 
-    sample = controller.get_plugin("sample_plugin")
-    
-    print(sample.get_identifier(sample))
-    print(sample.get_description(sample))
-    sample.startup(sample)
-    sample.execute(sample)
-    sample.shutdown(sample)
-
+    controller.set_active_plugin("sample_plugin")
+    print(controller.get_active_identifier())
+    print(controller.get_active_description())
+    controller.active_startup()
+    controller.active_execute()
+    controller.active_shutdown()
     pass
 
 
@@ -65,7 +100,6 @@ def setup():
     if not os.path.exists(os.path.join(PLUGINS_DIR, "__init__.py")):
         with open(os.path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
-
 
     # # Train Amalgam if File is Missing
 
