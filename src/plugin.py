@@ -17,19 +17,16 @@ class Plugin(ABC):
         """Runs when the plugin is stopped/program is shutdown."""
         raise NotImplementedError("Plugin shutdown not implemented.")
 
-    @property
     @abstractmethod
     def get_identifier(self) -> str:
         """Returns the unique identifier for the plugin."""
         raise NotImplementedError("Plugin identifier not implemented.")
     
-    @property
     @abstractmethod
     def register_commands(self) -> list[str]:
         """Returns a list of commands that the program registers ON TRAINING."""
         raise NotImplementedError("Plugin command registration not implemented.")
 
-    @property
     @abstractmethod
     def get_description(self) -> str:
         """Returns a human-readable/AI-readable description of the plugin."""
