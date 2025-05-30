@@ -2,6 +2,7 @@
 src/speech_recognition/model
 plugins/
 user_data/
+model_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
