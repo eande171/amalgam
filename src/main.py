@@ -1,8 +1,6 @@
 from src.speech_recognition.stt_tts import sst, tts
 import os
-import json
-import importlib.util
-import plugins.test as test_plugin
+import importlib
 
 import spacy
 
@@ -136,7 +134,13 @@ def setup():
         with open(os.path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
 
-    # # Train Amalgam if File is Missing
+    # Train Amalgam if File is Missing
+    if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")):
+        print("Model not found. Training the model...")
+        from src.trainer import train_model, generate_model_data
+
+        generate_model_data()
+        train_model()
 
 if __name__ == "__main__":
     main()
