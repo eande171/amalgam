@@ -15,7 +15,7 @@ PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 
 VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
 
-TRIGGER_PHRASE = ["hey amalgam", "hello amalgam", "hi amalgam", "hey computer", "hello computer", "hi computer"]
+TRIGGER_PHRASE = ["hey amalgam", "hello amalgam", "hi amalgam", "hey computer", "hello computer", "hi computer", "hey jarvis", "hello jarvis", "hi jarvis", "amalgam", "jarvis", "computer"]
 
 class PluginController:
     def __init__(self):
@@ -100,6 +100,10 @@ def main():
     sst = speech.sst
     tts = speech.tts
 
+    # Initialize Plugin Controller
+    controller = PluginController()
+    controller.load_plugins()
+
     while True:
         try:
             text = sst(VOSK_MODEL_DIR).lower()
@@ -118,6 +122,8 @@ def main():
                 
                 print(f"Trigger found: {found_trigger}")
                 print(f"Command text: {text}")
+
+                process_command(text, controller)
 
         except Exception as e:
             print(f"Error during speech recognition: {e}")
@@ -143,8 +149,11 @@ def main():
         doc = nlp_trained("Turn on the lights for me please.")
         print("DOC:", doc)
         print("CATS:", doc.cats)
-        # print("ENTS:", doc.ents[1].label_)
 
+        confidence = max(doc.cats, key=doc.cats.get)
+        print("Confidence:", confidence, "with value:", doc.cats[confidence])
+
+        # print("ENTS:", doc.ents[1].label_)
         # Check if the model is loaded correctly    
 
 
@@ -152,6 +161,38 @@ def main():
         print(f"Model not found at {model_path}. Please train the model first.")
         return
     pass'''
+
+def process_command(command: str, plugin_controller: PluginController):
+    """
+    Process the command and execute the corresponding plugin action.
+    """
+    # Identify the command using the trained model
+    identified_command = identify_command(command)
+
+    # Check if the identified command matches any plugin identifier
+    if identified_command in plugin_controller.list_identifiers():
+        plugin_controller.set_active_plugin(identified_command)
+        plugin_controller.active_startup()
+        plugin_controller.active_execute()
+        plugin_controller.active_shutdown()
+        # return f"Executed command: {identified_command}"
+    elif not identified_command == "unknown":
+        print(f"No matching plugin found for command: {command}")
+        # return f"No matching plugin found for command: {command}"
+
+
+def identify_command(command: str) -> str:
+    model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
+
+    nlp_trained = spacy.load(model_path)
+    doc = nlp_trained(command)
+    confidence = max(doc.cats, key=doc.cats.get)
+
+    print(f"Identified command: {confidence} with confidence value: {doc.cats[confidence]}")
+    if doc.cats[confidence] > 0.8:
+        return confidence
+    else:
+        return "unknown"
 
 
 
