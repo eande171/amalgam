@@ -1,4 +1,4 @@
-from src.speech_recognition.stt_tts import sst, tts
+from src.speech_recognition.stt_tts import Speech
 import os
 import importlib
 
@@ -13,6 +13,9 @@ MODEL_DATA_DIR = os.path.join(CORE_DIR, "model_data")
 USER_DATA_DIR = os.path.join(CORE_DIR, "user_data")
 PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 
+VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
+
+TRIGGER_PHRASE = ["hey amalgam", "hello amalgam", "hi amalgam", "hey computer", "hello computer", "hi computer"]
 
 class PluginController:
     def __init__(self):
@@ -92,6 +95,34 @@ class PluginController:
 def main():
     setup()
 
+    # Initialize Speech Recognition and Text-to-Speech
+    speech = Speech(VOSK_MODEL_DIR)
+    sst = speech.sst
+    tts = speech.tts
+
+    while True:
+        try:
+            text = sst(VOSK_MODEL_DIR).lower()
+            if not text:
+                continue
+
+            found_trigger = None
+            for trigger in TRIGGER_PHRASE:
+                if trigger in text:
+                    found_trigger = trigger
+                    break
+
+            if found_trigger:
+                trigger_start_index = text.find(found_trigger)
+                text = text[trigger_start_index + len(found_trigger):].strip()
+                
+                print(f"Trigger found: {found_trigger}")
+                print(f"Command text: {text}")
+
+        except Exception as e:
+            print(f"Error during speech recognition: {e}")
+            break
+
     '''controller = PluginController()
     controller.load_plugins()
 
@@ -104,7 +135,7 @@ def main():
     print(controller.list_identifiers())
     print(controller.list_active_commands())'''
 
-    model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
+    '''model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
 
     try:
         nlp_trained = spacy.load(model_path)
@@ -120,7 +151,7 @@ def main():
     except OSError:
         print(f"Model not found at {model_path}. Please train the model first.")
         return
-    pass
+    pass'''
 
 
 
@@ -133,6 +164,10 @@ def setup():
     if not os.path.exists(os.path.join(PLUGINS_DIR, "__init__.py")):
         with open(os.path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
+
+    if not os.path.exists(os.path.join(USER_DATA_DIR, "config.json")):
+        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
+            f.write("{}")
 
     # Train Amalgam if File is Missing
     if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")):
