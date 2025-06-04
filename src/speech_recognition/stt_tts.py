@@ -7,6 +7,13 @@ import os
 r = sr.Recognizer()
 tts_engine = ttsx.init() # Path to the Vosk model directory
 
+print("Adjusting for ambient noise... Please be quiet.")
+with sr.Microphone() as source:
+    r.adjust_for_ambient_noise(source, duration=0.5)  # Adjust for ambient noise
+
+r.pause_threshold += 0.8
+r.non_speaking_duration = 0.8
+
 class Speech():
     def __init__(self, model_path: str = "model"):
         self.model_path = model_path
@@ -26,7 +33,8 @@ class Speech():
     def sst(self, model_path) -> str:
         """Speech to Text"""
         with sr.Microphone() as source:
-            audio = r.listen(source)    
+            audio = r.listen(source)
+            print("Listening...")
             try:
                 text = self.recognise_vosk(audio, model_path)
                 print(f"You: {text}")
