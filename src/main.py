@@ -1,8 +1,13 @@
 from src.speech_recognition.stt_tts import Speech
+from src.config import load_config
 import os
 import importlib
 
 import spacy
+
+from dirhash import dirhash
+import json
+
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +21,9 @@ PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
 
 TRIGGER_PHRASE = ["hey amalgam", "hello amalgam", "hi amalgam", "hey computer", "hello computer", "hi computer", "hey jarvis", "hello jarvis", "hi jarvis", "amalgam", "jarvis", "computer"]
+
+# Global Variables
+config_data = {}
 
 class PluginController:
     def __init__(self):
@@ -129,39 +137,6 @@ def main():
             print(f"Error during speech recognition: {e}")
             break
 
-    '''controller = PluginController()
-    controller.load_plugins()
-
-    controller.set_active_plugin("sample_plugin")
-    print(controller.get_active_identifier())
-    print(controller.get_active_description())
-    controller.active_startup()
-    controller.active_execute()
-    controller.active_shutdown()
-    print(controller.list_identifiers())
-    print(controller.list_active_commands())'''
-
-    '''model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
-
-    try:
-        nlp_trained = spacy.load(model_path)
-
-        doc = nlp_trained("Turn on the lights for me please.")
-        print("DOC:", doc)
-        print("CATS:", doc.cats)
-
-        confidence = max(doc.cats, key=doc.cats.get)
-        print("Confidence:", confidence, "with value:", doc.cats[confidence])
-
-        # print("ENTS:", doc.ents[1].label_)
-        # Check if the model is loaded correctly    
-
-
-    except OSError:
-        print(f"Model not found at {model_path}. Please train the model first.")
-        return
-    pass'''
-
 def process_command(command: str, plugin_controller: PluginController):
     """
     Process the command and execute the corresponding plugin action.
@@ -180,7 +155,6 @@ def process_command(command: str, plugin_controller: PluginController):
         print(f"No matching plugin found for command: {command}")
         # return f"No matching plugin found for command: {command}"
 
-
 def identify_command(command: str) -> str:
     model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
 
@@ -194,9 +168,23 @@ def identify_command(command: str) -> str:
     else:
         return "unknown"
 
+def hash_check() -> bool:
+    global config_data
 
+    print("Config Data: ", config_data)
+
+    if not config_data["plugin_hash"] == dirhash(PLUGINS_DIR, "sha256"):
+        print("Plugin hash mismatch. Reinitializing plugins...")
+        config_data["plugin_hash"] = dirhash(PLUGINS_DIR, "sha256")
+        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
+            f.write(json.dumps(config_data))
+        return False
+    
+    return True
 
 def setup():
+    global config_data
+    
     # Create Directories
     os.makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
     os.makedirs(PLUGINS_DIR, exist_ok = True)
@@ -209,7 +197,9 @@ def setup():
     if not os.path.exists(os.path.join(USER_DATA_DIR, "config.json")):
         with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
             f.write("{}")
-
+ 
+    config_data = load_config(os.path.join(USER_DATA_DIR, "config.json"))
+    
     # Train Amalgam if File is Missing
     if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")):
         print("Model not found. Training the model...")
@@ -217,6 +207,13 @@ def setup():
 
         generate_model_data()
         train_model()
+    elif not hash_check():
+        print("New Plugin detected. Training the model...")
+        from src.trainer import train_model, generate_model_data
+
+        generate_model_data()
+        train_model()
+
 
 if __name__ == "__main__":
     main()
