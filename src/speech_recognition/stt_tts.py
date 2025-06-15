@@ -1,7 +1,7 @@
 import speech_recognition as sr
 import pyttsx3 as ttsx
 import json
-from vosk import Model, KaldiRecognizer
+from vosk import Model, KaldiRecognizer, SetLogLevel
 import os
 
 r = sr.Recognizer()
@@ -13,6 +13,7 @@ with sr.Microphone() as source:
 
 r.pause_threshold += 0.8
 r.non_speaking_duration = 0.8
+SetLogLevel(-1)
 
 class Speech():
     def __init__(self, model_path: str = "model"):
@@ -33,8 +34,8 @@ class Speech():
     def sst(self, model_path) -> str:
         """Speech to Text"""
         with sr.Microphone() as source:
-            audio = r.listen(source)
             print("Listening...")
+            audio = r.listen(source)
             try:
                 text = self.recognise_vosk(audio, model_path)
                 print(f"You: {text}")
