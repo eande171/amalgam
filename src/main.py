@@ -116,11 +116,11 @@ def main():
     controller = PluginController()
     controller.load_plugins()
 
+    Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
+
     while True: 
         try:
             if idenfify_wakeword(): 
-                # Output.tts("Hello, I am Amalgam. How can I assist you today?")
-                
                 command = sst().lower()
                 process_command(command, controller)
         except Exception as e:
@@ -151,9 +151,7 @@ def idenfify_wakeword() -> bool:
             # print("Model Prediction: ", model.predict(audio_array))
 
             prediction = model.predict(audio_array, threshold={"hey_jarvis": 0.5}, debounce_time=0.75)
-            print(f"Wake Word Prediction: {prediction}")
             if prediction["hey_jarvis"] > 0.5:
-                print("Wake Word Detected!")
                 return True
             else:
                 time.sleep(0.1)

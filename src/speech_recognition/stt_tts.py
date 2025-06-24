@@ -1,8 +1,7 @@
 import speech_recognition as sr
 from vosk import Model, KaldiRecognizer, SetLogLevel
 
-from threading import Thread
-from queue import Queue
+import numpy as np
 
 import json
 import os
@@ -41,6 +40,8 @@ class Speech():
         """Speech to Text"""
         with sr.Microphone() as source:
             print("Listening...")
+            Output.play_blip()
+            
             audio = r.listen(source)
             print("Not Listening...")
             try:
@@ -64,3 +65,55 @@ class Output():
         print(f"Amalgam: {colour} {text}\033[0m")
         tts_engine.say(text)
         tts_engine.runAndWait()
+    
+    def generate_blip(
+        duration=0.1,  # very short duration in seconds
+        start_freq=1000, # starting frequency for the blip
+        end_freq=1500,   # ending frequency (can be same as start_freq for a pure tone blip)
+        volume=0.6,    # overall volume (0.0 to 1.0)
+        rate=44100,    # samples per second
+        decay_factor=50 # Controls how fast the sound decays. Higher = faster decay.
+    ):
+        """
+        Generates a simple "blip" sound.
+        Can be a very short, quick frequency sweep or a single tone with fast decay.
+        """
+        t = np.linspace(0, duration, int(rate * duration), endpoint=False)
+
+        # 1. Frequency Generation (linear sweep for a tiny "chirp")
+        # If start_freq == end_freq, it will be a constant frequency blip.
+        frequencies = np.linspace(start_freq, end_freq, len(t))
+        phase = 2 * np.pi * np.cumsum(frequencies / rate)
+        
+        # 2. Envelope (fast attack, very fast decay)
+        # A simple exponential decay works well for blips.
+        # The decay_factor controls the speed of the decay.
+        envelope = np.exp(-decay_factor * t)
+        
+        # 3. Generate the sound wave
+        samples = volume * np.sin(phase) * envelope
+
+        # Ensure samples are within the valid float32 range (-1.0 to 1.0)
+        # This normalization helps prevent clipping if volume is too high or decay_factor is too low
+        max_amp = np.max(np.abs(samples))
+        if max_amp > 0:
+            samples /= max_amp
+        
+        return samples.astype(np.float32).tobytes()
+
+    @staticmethod
+    def play_sound(sound_data):
+        """Play sound data using PyAudio"""
+        import pyaudio
+
+        p = pyaudio.PyAudio()
+        stream = p.open(format=pyaudio.paFloat32, channels=1, rate=44100, output=True)
+        stream.write(sound_data)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+    @staticmethod
+    def play_blip():
+        """Generate and play a blip sound"""
+        Output.play_sound(Output.generate_blip())
