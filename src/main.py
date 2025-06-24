@@ -1,10 +1,17 @@
-from src.speech_recognition.stt_tts import Speech
+from src.speech_recognition.stt_tts import Speech, Output
 from src.config import load_config
 import os
 import importlib
 
 import spacy
 import json
+
+from openwakeword.model import Model
+from openwakeword.utils import download_models
+
+import pyaudio
+import numpy as np 
+import time
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +24,8 @@ PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 
 VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
 
-TRIGGER_PHRASE = ["hey amalgam", "hello amalgam", "hi amalgam", "hey computer", "hello computer", "hi computer", "hey jarvis", "hello jarvis", "hi jarvis", "amalgam", "jarvis", "computer"]
+download_models(["hey_jarvis"])
+model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
 # Global Variables
 config_data = {}
@@ -108,30 +116,56 @@ def main():
     controller = PluginController()
     controller.load_plugins()
 
-    while True:
+    while True: 
         try:
-            text = sst().lower()
-            if not text:
-                continue
-
-            found_trigger = None
-            for trigger in TRIGGER_PHRASE:
-                if trigger in text:
-                    found_trigger = trigger
-                    break
-
-            if found_trigger:
-                trigger_start_index = text.find(found_trigger)
-                text = text[trigger_start_index + len(found_trigger):].strip()
+            if idenfify_wakeword(): 
+                # Output.tts("Hello, I am Amalgam. How can I assist you today?")
                 
-                print(f"Trigger found: {found_trigger}")
-                print(f"Command text: {text}")
-
-                process_command(text, controller)
-
+                command = sst().lower()
+                process_command(command, controller)
         except Exception as e:
-            print(f"Error during speech recognition: {e}")
-            break
+            print(f"Error during wake word detection: {e}")
+
+def idenfify_wakeword() -> bool:
+    # Config
+    RATE = 16000  # openWakeWord and SpeechRecognition typically use 16kHz
+    CHUNK_SIZE_WW = 1280 # Frame length for openWakeWord (16000 * 0.080s)
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+
+    p = pyaudio.PyAudio()
+
+    stream = p.open(
+            format=FORMAT,
+            channels=CHANNELS,
+            rate=RATE,
+            input=True,
+            frames_per_buffer=CHUNK_SIZE_WW)    
+    
+    stream.start_stream()
+
+    try:
+        while True:
+            audio_data = stream.read(CHUNK_SIZE_WW, exception_on_overflow=False)
+            audio_array = np.frombuffer(audio_data, dtype=np.int16)
+            # print("Model Prediction: ", model.predict(audio_array))
+
+            prediction = model.predict(audio_array, threshold={"hey_jarvis": 0.5}, debounce_time=0.75)
+            print(f"Wake Word Prediction: {prediction}")
+            if prediction["hey_jarvis"] > 0.5:
+                print("Wake Word Detected!")
+                return True
+            else:
+                time.sleep(0.1)
+    except KeyboardInterrupt:
+        Output.tts("Exiting amalgam.")
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+        exit(0)
+
 
 def process_command(command: str, plugin_controller: PluginController):
     """
@@ -164,15 +198,19 @@ def identify_command(command: str) -> str:
     else:
         return "unknown"
 
+# Setup and Configuration
 def hash_check() -> bool:
     global config_data
     from dirhash import dirhash
 
-    print("Config Data: ", config_data)
+    computed_hash = dirhash(PLUGINS_DIR, "sha256", match="*.py", ignore = ["__pycache__", "__init__.py"]) 
 
-    if not config_data["plugin_hash"] == dirhash(PLUGINS_DIR, "sha256"):
+    print("Config Data: ", config_data)
+    print("Plugins Directory Hash: ", computed_hash)
+
+    if not config_data["plugin_hash"] == computed_hash:
         print("Plugin hash mismatch. Reinitializing plugins...")
-        config_data["plugin_hash"] = dirhash(PLUGINS_DIR, "sha256")
+        config_data["plugin_hash"] = computed_hash
         with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
             f.write(json.dumps(config_data))
         return False

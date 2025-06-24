@@ -1,6 +1,9 @@
 import speech_recognition as sr
 from vosk import Model, KaldiRecognizer, SetLogLevel
 
+from threading import Thread
+from queue import Queue
+
 import json
 import os
 
@@ -20,15 +23,16 @@ SetLogLevel(-1)
 class Speech():
     def __init__(self, model_path: str = "model"):
         self.model_path = model_path
+        if not os.path.exists(self.model_path):
+            raise FileNotFoundError(f"Vosk model not found at {self.model_path}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
+
+        self.model = Model(self.model_path)
+        self.rec = KaldiRecognizer(self.model, 16000)
 
     def recognise_vosk(self, audio):
         """Recognize speech using Vosk"""
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Vosk model not found at {self.model_path}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
-        model = Model(self.model_path)
-        rec = KaldiRecognizer(model, 16000)
-        rec.AcceptWaveform(audio.get_raw_data(convert_rate=16000, convert_width=2))
-        result = rec.FinalResult()
+        self.rec.AcceptWaveform(audio.get_raw_data(convert_rate=16000, convert_width=2))
+        result = self.rec.FinalResult()
 
         # print(f"Vosk Result: {result}")
         return json.loads(result)["text"]
@@ -38,6 +42,7 @@ class Speech():
         with sr.Microphone() as source:
             print("Listening...")
             audio = r.listen(source)
+            print("Not Listening...")
             try:
                 text = self.recognise_vosk(audio)
                 print(f"You: {text}")
@@ -45,16 +50,16 @@ class Speech():
             except sr.UnknownValueError:
                 Output.tts("Sorry, I did not understand that.")
                 return ""
-
+            
 class Output():
-    def __init__(self):
-        self.GREEN = "\033[92m"   # Success
-        self.YELLOW = "\033[93m"  # Warning
-        self.RED = "\033[91m"     # Error
-        self.BLUE = "\033[94m"    # Information
-        self.RESET = "\033[0m"    # Reset to default color
+    GREEN = "\033[92m"   # Success
+    YELLOW = "\033[93m"  # Warning
+    RED = "\033[91m"     # Error
+    BLUE = "\033[94m"    # Information
+    RESET = "\033[0m"    # Reset to default color
 
-    def tts(self, text: str, colour: str = "\033[0m"):
+    @staticmethod
+    def tts(text: str, colour: str = "\033[0m"):
         """Text to Speech"""
         print(f"Amalgam: {colour} {text}\033[0m")
         tts_engine.say(text)
