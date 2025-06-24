@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod 
+from abc import ABC, abstractmethod
 
 # Plugin Class
 class Plugin(ABC):
@@ -11,7 +11,7 @@ class Plugin(ABC):
     def execute(self):
         """Runs when the plugin is executed."""
         raise NotImplementedError("Plugin execution not implemented.")
-    
+
     @abstractmethod
     def shutdown(self):
         """Runs when the plugin is stopped/program is shutdown."""
@@ -21,7 +21,7 @@ class Plugin(ABC):
     def get_identifier(self) -> str:
         """Returns the unique identifier for the plugin."""
         raise NotImplementedError("Plugin identifier not implemented.")
-    
+
     @abstractmethod
     def register_commands(self) -> list[str]:
         """Returns a list of commands that the program registers ON TRAINING."""

@@ -1,12 +1,15 @@
-import speech_recognition as sr
-from vosk import Model, KaldiRecognizer, SetLogLevel
-
-import numpy as np
-
-import json
 import os
+import json
 
+from vosk import Model, KaldiRecognizer, SetLogLevel
+import numpy as np
 import pyttsx3 as ttsx
+import pyaudio
+
+import speech_recognition as sr
+
+
+
 tts_engine = ttsx.init()
 
 r = sr.Recognizer()
@@ -41,7 +44,7 @@ class Speech():
         with sr.Microphone() as source:
             print("Listening...")
             Output.play_blip()
-            
+
             audio = r.listen(source)
             print("Not Listening...")
             try:
@@ -51,7 +54,7 @@ class Speech():
             except sr.UnknownValueError:
                 Output.tts("Sorry, I did not understand that.")
                 return ""
-            
+
 class Output():
     GREEN = "\033[92m"   # Success
     YELLOW = "\033[93m"  # Warning
@@ -65,7 +68,8 @@ class Output():
         print(f"Amalgam: {colour} {text}\033[0m")
         tts_engine.say(text)
         tts_engine.runAndWait()
-    
+
+    @staticmethod
     def generate_blip(
         duration=0.1,  # very short duration in seconds
         start_freq=1000, # starting frequency for the blip
@@ -104,11 +108,11 @@ class Output():
     @staticmethod
     def play_sound(sound_data):
         """Play sound data using PyAudio"""
-        import pyaudio
-
         p = pyaudio.PyAudio()
+
         stream = p.open(format=pyaudio.paFloat32, channels=1, rate=44100, output=True)
         stream.write(sound_data)
+
         stream.stop_stream()
         stream.close()
         p.terminate()

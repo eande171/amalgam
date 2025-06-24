@@ -1,17 +1,18 @@
-from src.speech_recognition.stt_tts import Speech, Output
-from src.config import load_config
 import os
 import importlib
-
-import spacy
 import json
+import time
 
 from openwakeword.model import Model
 from openwakeword.utils import download_models
 
 import pyaudio
-import numpy as np 
-import time
+import numpy as np
+
+import spacy
+
+from src.speech_recognition.stt_tts import Speech, Output
+from src.config import load_config
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -118,9 +119,9 @@ def main():
 
     Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
 
-    while True: 
+    while True:
         try:
-            if idenfify_wakeword(): 
+            if idenfify_wakeword():
                 command = sst().lower()
                 process_command(command, controller)
         except Exception as e:
@@ -140,8 +141,8 @@ def idenfify_wakeword() -> bool:
             channels=CHANNELS,
             rate=RATE,
             input=True,
-            frames_per_buffer=CHUNK_SIZE_WW)    
-    
+            frames_per_buffer=CHUNK_SIZE_WW)
+
     stream.start_stream()
 
     try:
@@ -150,7 +151,9 @@ def idenfify_wakeword() -> bool:
             audio_array = np.frombuffer(audio_data, dtype=np.int16)
             # print("Model Prediction: ", model.predict(audio_array))
 
-            prediction = model.predict(audio_array, threshold={"hey_jarvis": 0.5}, debounce_time=0.75)
+            prediction = model.predict(audio_array,
+                                       threshold={"hey_jarvis": 0.5},
+                                       debounce_time=0.75)
             if prediction["hey_jarvis"] > 0.5:
                 return True
             else:

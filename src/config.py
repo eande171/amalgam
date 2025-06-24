@@ -18,14 +18,14 @@ def load_config(config_path):
 
             with open(config_path, "w") as file:
                 file.write(json.dumps(config))
-        
+
         except json.JSONDecodeError:
             print(f"Error decoding JSON from {config_path}. File may be corrupt or invalid. Using default configuration.")
             config = default_config
         except Exception as e:
             print(f"Error reading configuration file {config_path}: {e}. Using default configuration.")
             config = default_config
-    
+
     return config
 
 def merge_config(default, config):

@@ -1,9 +1,10 @@
+import os
+import sys
+import subprocess
+import random
 import spacy
 from spacy.tokens import DocBin
-import random
 from src.main import PluginController
-import os
-import subprocess
 
 # Get Sentence Data
 def generate_model_data():
@@ -38,7 +39,7 @@ def generate_model_data():
 
     # print("Data New: ", spacy_train_data)
 
-    # Prepare Training and Test Data 
+    # Prepare Training and Test Data
     random.shuffle(spacy_train_data)
 
     train_split = int(len(spacy_train_data) * 0.8)
@@ -72,7 +73,7 @@ def generate_model_data():
 
     # Save Training and Test Data
     train_doc_bin = convert_to_docbin(train_data)
-    train_doc_bin.to_disk(os.path.join("model_data", "train.spacy")) 
+    train_doc_bin.to_disk(os.path.join("model_data", "train.spacy"))
 
     test_doc_bin = convert_to_docbin(test_data)
     test_doc_bin.to_disk(os.path.join("model_data", "dev.spacy"))
@@ -81,7 +82,6 @@ def generate_model_data():
 
 # Train the model
 def train_model():
-    import sys
     python_executable = sys.executable
 
     try:
