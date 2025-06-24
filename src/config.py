@@ -36,7 +36,3 @@ def merge_config(default, config):
         else:
             merged[key] = value
     return merged
-
-if __name__ == "__main__":
-    merge = merge_config(default_config, {})
-    print(merge)

@@ -4,10 +4,7 @@ import os
 import importlib
 
 import spacy
-
-from dirhash import dirhash
 import json
-
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -106,7 +103,6 @@ def main():
     # Initialize Speech Recognition and Text-to-Speech
     speech = Speech(VOSK_MODEL_DIR)
     sst = speech.sst
-    tts = speech.tts
 
     # Initialize Plugin Controller
     controller = PluginController()
@@ -114,7 +110,7 @@ def main():
 
     while True:
         try:
-            text = sst(VOSK_MODEL_DIR).lower()
+            text = sst().lower()
             if not text:
                 continue
 
@@ -163,13 +159,14 @@ def identify_command(command: str) -> str:
     confidence = max(doc.cats, key=doc.cats.get)
 
     print(f"Identified command: {confidence} with confidence value: {doc.cats[confidence]}")
-    if doc.cats[confidence] > 0.8:
+    if doc.cats[confidence] > 0.5:
         return confidence
     else:
         return "unknown"
 
 def hash_check() -> bool:
     global config_data
+    from dirhash import dirhash
 
     print("Config Data: ", config_data)
 
@@ -208,12 +205,11 @@ def setup():
         generate_model_data()
         train_model()
     elif not hash_check():
-        print("New Plugin detected. Training the model...")
+        print("Plugins updated. Training the model...")
         from src.trainer import train_model, generate_model_data
 
         generate_model_data()
         train_model()
-
 
 if __name__ == "__main__":
     main()
