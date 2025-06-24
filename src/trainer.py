@@ -89,7 +89,7 @@ def train_model():
             python_executable, "-m", "spacy", "init", "config",
             "model_data/config.cfg", "--lang", "en",
             "--pipeline", "textcat",
-            "--optimize", "accuracy", "--force"
+            "--optimize", "efficiency", "--force"
         ])
     except subprocess.CalledProcessError as e:
         print(f"Error initializing config: {e}")
