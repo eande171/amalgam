@@ -47,6 +47,7 @@ class Speech():
 
             audio = r.listen(source)
             print("Not Listening...")
+            Output.play_blip(2)
             try:
                 text = self.recognise_vosk(audio)
                 print(f"You: {text}")
@@ -118,6 +119,7 @@ class Output():
         p.terminate()
 
     @staticmethod
-    def play_blip():
+    def play_blip(count: int = 1):
         """Generate and play a blip sound"""
-        Output.play_sound(Output.generate_blip())
+        for _ in range(count):
+            Output.play_sound(Output.generate_blip())

@@ -33,3 +33,4 @@ class Plugin(ABC):
         raise NotImplementedError("Plugin description not implemented.")
 
 # Plugin API
+
