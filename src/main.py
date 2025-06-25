@@ -1,17 +1,18 @@
-from src.speech_recognition.stt_tts import Speech, Output
-from src.config import load_config
 import os
 import importlib
-
-import spacy
 import json
+import time
 
 from openwakeword.model import Model
 from openwakeword.utils import download_models
 
 import pyaudio
-import numpy as np 
-import time
+import numpy as np
+
+import spacy
+
+from src.speech_recognition.stt_tts import Speech, Output
+from src.config import load_config
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +30,7 @@ model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
 # Global Variables
 config_data = {}
+active_application = "Spotify"
 
 class PluginController:
     def __init__(self):
@@ -106,6 +108,9 @@ class PluginController:
             raise ValueError("No active plugin set.")
 
 def main():
+    """
+    Main Amalgam Loop. Configures Setup and SST. Processes Commands after Hearing Wakeword.
+    """
     setup()
 
     # Initialize Speech Recognition and Text-to-Speech
@@ -118,15 +123,18 @@ def main():
 
     Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
 
-    while True: 
+    while True:
         try:
-            if idenfify_wakeword(): 
+            if idenfify_wakeword():
                 command = sst().lower()
                 process_command(command, controller)
         except Exception as e:
             print(f"Error during wake word detection: {e}")
 
 def idenfify_wakeword() -> bool:
+    """
+    Returns True if the wake word "hey jarvis" is detected. Will run indefinitely until the wake word is detected.
+    """
     # Config
     RATE = 16000  # openWakeWord and SpeechRecognition typically use 16kHz
     CHUNK_SIZE_WW = 1280 # Frame length for openWakeWord (16000 * 0.080s)
@@ -140,8 +148,8 @@ def idenfify_wakeword() -> bool:
             channels=CHANNELS,
             rate=RATE,
             input=True,
-            frames_per_buffer=CHUNK_SIZE_WW)    
-    
+            frames_per_buffer=CHUNK_SIZE_WW)
+
     stream.start_stream()
 
     try:
@@ -150,7 +158,9 @@ def idenfify_wakeword() -> bool:
             audio_array = np.frombuffer(audio_data, dtype=np.int16)
             # print("Model Prediction: ", model.predict(audio_array))
 
-            prediction = model.predict(audio_array, threshold={"hey_jarvis": 0.5}, debounce_time=0.75)
+            prediction = model.predict(audio_array,
+                                       threshold={"hey_jarvis": 0.5},
+                                       debounce_time=0.75)
             if prediction["hey_jarvis"] > 0.5:
                 return True
             else:
@@ -163,7 +173,6 @@ def idenfify_wakeword() -> bool:
         p.terminate()
 
         exit(0)
-
 
 def process_command(command: str, plugin_controller: PluginController):
     """
@@ -178,12 +187,13 @@ def process_command(command: str, plugin_controller: PluginController):
         plugin_controller.active_startup()
         plugin_controller.active_execute()
         plugin_controller.active_shutdown()
-        # return f"Executed command: {identified_command}"
     elif not identified_command == "unknown":
         print(f"No matching plugin found for command: {command}")
-        # return f"No matching plugin found for command: {command}"
 
 def identify_command(command: str) -> str:
+    """
+    Identify the command using the trained model.
+    """
     model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
 
     nlp_trained = spacy.load(model_path)
@@ -198,6 +208,10 @@ def identify_command(command: str) -> str:
 
 # Setup and Configuration
 def hash_check() -> bool:
+    """
+    Compares the current hash of the plugins directory with the stored hash in config_data.
+    In the event of a mismatch, it updates the config_data with the new hash.
+    """
     global config_data
     from dirhash import dirhash
 
@@ -216,6 +230,9 @@ def hash_check() -> bool:
     return True
 
 def setup():
+    """
+    Setup function to initialize directories, load configuration, and train the model if necessary.
+    """
     global config_data
     
     # Create Directories
@@ -234,14 +251,8 @@ def setup():
     config_data = load_config(os.path.join(USER_DATA_DIR, "config.json"))
     
     # Train Amalgam if File is Missing
-    if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")):
-        print("Model not found. Training the model...")
-        from src.trainer import train_model, generate_model_data
-
-        generate_model_data()
-        train_model()
-    elif not hash_check():
-        print("Plugins updated. Training the model...")
+    if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
+        print("Current Model Invalid. Training the model...")
         from src.trainer import train_model, generate_model_data
 
         generate_model_data()
