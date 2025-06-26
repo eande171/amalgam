@@ -13,6 +13,7 @@ import spacy
 
 from src.speech_recognition.stt_tts import Speech, Output
 from src.config import Config
+from src.logger import setup_logging
 
 # Constants
 SOURCE_DIR = path.dirname(path.abspath(__file__))
@@ -26,6 +27,7 @@ PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
 VOSK_MODEL_DIR = path.join(SOURCE_DIR, "speech_recognition", "model")
 
 CONFIG_FILE = path.join(USER_DATA_DIR, "config.json")
+LOG_DIR = path.join(USER_DATA_DIR, "logs")
 
 download_models(["hey_jarvis"])
 model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
@@ -119,6 +121,8 @@ def main():
     Main Amalgam Loop. Configures Setup and SST. Processes Commands after Hearing Wakeword.
     """
     setup()
+    setup_logging()
+
 
     # Initialize Speech Recognition and Text-to-Speech
     speech = Speech(VOSK_MODEL_DIR)
@@ -268,3 +272,4 @@ def setup():
 
 if __name__ == "__main__":
     main()
+
