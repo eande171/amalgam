@@ -4,7 +4,7 @@ import subprocess
 import random
 import spacy
 from spacy.tokens import DocBin
-from src.main import PluginController
+from src.plugin import PluginController
 
 # Get Sentence Data
 def generate_model_data():
@@ -24,7 +24,7 @@ def generate_model_data():
             cats[identifier] = True
             spacy_train_data.append((command, {"cats": cats}))
 
-    # print("Data: ", spacy_train_data)
+    print("Data: ", spacy_train_data)
 
     updated_spacy_train_data = []
     for text, annotations in spacy_train_data:
