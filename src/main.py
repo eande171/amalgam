@@ -1,5 +1,4 @@
-from os import path, listdir, makedirs
-from importlib import import_module
+from os import path, makedirs
 from time import sleep
 from dirhash import dirhash
 
@@ -11,7 +10,7 @@ import numpy as np
 
 import spacy
 
-from src.speech_recognition.stt_tts import Speech, Output
+from src.speech_recognition.stt_tts import Input, Output
 from src.config import Config
 from src.logger import setup_logging
 
@@ -32,111 +31,22 @@ LOG_DIR = path.join(USER_DATA_DIR, "logs")
 download_models(["hey_jarvis"])
 model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
-class PluginController:
-    active_plugin = None
-    identifiers = []
-    plugins = {}
-
-    @staticmethod
-    def load_plugins():
-        if not path.exists(PLUGINS_DIR):
-            raise FileNotFoundError(f"Plugins directory '{PLUGINS_DIR}' does not exist.")
-        
-        for file in listdir(PLUGINS_DIR):
-            if file.endswith(".py") and not file == "__init__.py":
-                plugin_name = file[:-3]
-                print(f"Loading plugin: {plugin_name}")
-
-                # Import the Plugin Class
-                plugin = import_module(f"plugins.{plugin_name}")
-                plugin_class = getattr(plugin, "Plugin", None)
-
-                print(f"Plugin Name: {plugin_class.get_identifier(plugin_class)}")
-                PluginController.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
-
-                PluginController.identifiers.append(plugin_class.get_identifier(plugin_class))
-
-    @staticmethod
-    def set_active_plugin(identifier):
-        if identifier in PluginController.plugins:
-            PluginController.active_plugin = PluginController.get_plugin(identifier)
-        else:
-            raise ValueError(f"Plugin with identifier '{identifier}' not found.")
-
-    @staticmethod    
-    def get_active_identifier():
-        if PluginController.active_plugin:
-            return PluginController.active_plugin.get_identifier(PluginController.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    @staticmethod    
-    def get_active_description():
-        if PluginController.active_plugin:
-            return PluginController.active_plugin.get_description(PluginController.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    @staticmethod    
-    def active_startup():
-        if PluginController.active_plugin:
-            PluginController.active_plugin.startup(PluginController.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    @staticmethod    
-    def active_execute():
-        if PluginController.active_plugin:
-            PluginController.active_plugin.execute(PluginController.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    @staticmethod    
-    def active_shutdown():
-        if PluginController.active_plugin:
-            PluginController.active_plugin.shutdown(PluginController.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    @staticmethod
-    def get_plugin(identifier):
-        if identifier in PluginController.plugins:
-            return PluginController.plugins[identifier]
-        else:
-            raise ValueError(f"Plugin with identifier '{identifier}' not found.")
-
-    @staticmethod
-    def list_identifiers():
-        return PluginController.identifiers
-
-    @staticmethod
-    def list_active_commands():
-        if PluginController.active_plugin:
-            return PluginController.active_plugin.register_commands()
-        else:
-            raise ValueError("No active plugin set.")
+from src.plugin import PluginController
 
 def main():
     """
     Main Amalgam Loop. Configures Setup and SST. Processes Commands after Hearing Wakeword.
     """
-    setup()
     setup_logging()
-
-
-    # Initialize Speech Recognition and Text-to-Speech
-    speech = Speech(VOSK_MODEL_DIR)
-    sst = speech.sst
-
-    # Initialize Plugin Controller
-    PluginController.load_plugins()
+    setup()
+    Input.setup()
 
     Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
 
     while True:
         try:
             if idenfify_wakeword():
-                command = sst().lower()
+                command = Input.sst().lower()
                 try:
                     process_command(command)
                 except Exception as e: 
@@ -261,7 +171,10 @@ def setup():
             f.write("{}")
     
     Config.init(CONFIG_FILE)
-    
+    PluginController.load_plugins()
+
+    print("ID before training", PluginController.list_identifiers())
+
     # Train Amalgam if File is Invalid or does not exist
     if not path.exists(path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
         print("Current Model Invalid. Training the model...")

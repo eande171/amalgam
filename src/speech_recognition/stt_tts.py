@@ -1,5 +1,6 @@
-import os
+from os import path
 import json
+import logging
 
 from vosk import Model, KaldiRecognizer, SetLogLevel
 import numpy as np
@@ -8,53 +9,63 @@ import pyaudio
 
 import speech_recognition as sr
 
+logger = logging.getLogger(__name__)
 
+class Input():
+    _r = sr.Recognizer()
+    _vosk_model = None
+    _kaldi = None
 
-tts_engine = ttsx.init()
+    @staticmethod
+    def setup():
+        """
+        Sets up the Speech To Text. Meant to be called once at the beginning of execution, before any STT is attempted. 
+        """
+        from src.main import VOSK_MODEL_DIR
 
-r = sr.Recognizer()
+        if not path.exists(VOSK_MODEL_DIR):
+            logger.critical("Vosk model is missing. Cannot start Amalgam")
+            raise FileNotFoundError(f"Vosk model not found at {VOSK_MODEL_DIR}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
 
-print("Adjusting for ambient noise... Please be quiet.")
-with sr.Microphone() as source:
-    r.adjust_for_ambient_noise(source, duration=0.5)  # Adjust for ambient noise
+        Input._vosk_model = Model(VOSK_MODEL_DIR)
+        Input._kaldi = KaldiRecognizer(Input._vosk_model, 16000)
 
-r.pause_threshold += 0.8
-r.non_speaking_duration += 0.8
-SetLogLevel(-1)
+        logger.info("Adjusting for ambient noise... Please be quiet.")
+        with sr.Microphone() as source:
+            Input._r.adjust_for_ambient_noise(source, duration=0.5)
 
-class Speech():
-    def __init__(self, model_path: str = "model"):
-        self.model_path = model_path
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Vosk model not found at {self.model_path}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
+        Input._r.pause_threshold += 0.8
+        Input._r.non_speaking_duration += 0.8
 
-        self.model = Model(self.model_path)
-        self.rec = KaldiRecognizer(self.model, 16000)
+        SetLogLevel(-1)
 
-    def recognise_vosk(self, audio):
+    @staticmethod
+    def recognise_vosk(audio):
         """Recognize speech using Vosk"""
-        self.rec.AcceptWaveform(audio.get_raw_data(convert_rate=16000, convert_width=2))
-        result = self.rec.FinalResult()
+        Input._kaldi.AcceptWaveform(audio.get_raw_data(convert_rate=16000, convert_width=2))
+        result = Input._kaldi.FinalResult()
 
         # print(f"Vosk Result: {result}")
         return json.loads(result)["text"]
-
-    def sst(self) -> str:
-        """Speech to Text"""
+    
+    @staticmethod
+    def sst() -> str:
+        """Speech To Text"""
         with sr.Microphone() as source:
             print("Listening...")
             Output.play_blip()
 
-            audio = r.listen(source)
+            audio = Input._r.listen(source)
             print("Not Listening...")
             Output.play_blip(2)
             try:
-                text = self.recognise_vosk(audio)
-                print(f"You: {text}")
+                text = Input.recognise_vosk(audio)
+                logger.info(f"You: {text}")
                 return text
             except sr.UnknownValueError:
+                logger.error("Unclear audio input. Amalgam does not know what was said.")
                 Output.tts("Sorry, I did not understand that.")
-                return ""
+                raise sr.UnknownValueError("Unclear audio input")
 
 class Output():
     GREEN = "\033[92m"   # Success
@@ -63,12 +74,14 @@ class Output():
     BLUE = "\033[94m"    # Information
     RESET = "\033[0m"    # Reset to default color
 
+    _tts_engine = ttsx.init()
+
     @staticmethod
     def tts(text: str, colour: str = "\033[0m"):
         """Text to Speech"""
         print(f"Amalgam: {colour} {text}\033[0m")
-        tts_engine.say(text)
-        tts_engine.runAndWait()
+        Output._tts_engine.say(text)
+        Output._tts_engine.runAndWait()
 
     @staticmethod
     def generate_blip(
