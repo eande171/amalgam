@@ -8,16 +8,13 @@ from src.main import PluginController
 
 # Get Sentence Data
 def generate_model_data():
-    plugin_controller = PluginController()
-    plugin_controller.load_plugins()
-
     spacy_train_data = []
     all_labels = set()
 
     # Associate Idenfifiers with Commands
-    for identifier in plugin_controller.list_identifiers():
-        plugin_controller.set_active_plugin(identifier)
-        commands = plugin_controller.list_active_commands()
+    for identifier in PluginController.list_identifiers():
+        PluginController.set_active_plugin(identifier)
+        commands = PluginController.list_active_commands()
 
         print(f"Processing plugin: {identifier} with commands: {commands}")
 

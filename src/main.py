@@ -1,7 +1,7 @@
-import os
-import importlib
-import json
-import time
+from os import path, listdir, makedirs
+from importlib import import_module
+from time import sleep
+from dirhash import dirhash
 
 from openwakeword.model import Model
 from openwakeword.utils import download_models
@@ -12,98 +12,105 @@ import numpy as np
 import spacy
 
 from src.speech_recognition.stt_tts import Speech, Output
-from src.config import load_config
+from src.config import Config
 
 # Constants
-SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
-CORE_DIR = os.path.join(SOURCE_DIR, "..")
+SOURCE_DIR = path.dirname(path.abspath(__file__))
+CORE_DIR = path.join(SOURCE_DIR, "..")
 
-PLUGINS_DIR = os.path.join(CORE_DIR, "plugins")
-MODEL_DATA_DIR = os.path.join(CORE_DIR, "model_data")
-USER_DATA_DIR = os.path.join(CORE_DIR, "user_data")
-PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
+PLUGINS_DIR = path.join(CORE_DIR, "plugins")
+MODEL_DATA_DIR = path.join(CORE_DIR, "model_data")
+USER_DATA_DIR = path.join(CORE_DIR, "user_data")
+PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
 
-VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
+VOSK_MODEL_DIR = path.join(SOURCE_DIR, "speech_recognition", "model")
+
+CONFIG_FILE = path.join(USER_DATA_DIR, "config.json")
 
 download_models(["hey_jarvis"])
 model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
-# Global Variables
-config_data = {}
-active_application = "Spotify"
-
 class PluginController:
-    def __init__(self):
-        self.active_plugin = None
-        self.identifiers = []
-        self.plugins = {}
+    active_plugin = None
+    identifiers = []
+    plugins = {}
 
-    def load_plugins(self):
-        if not os.path.exists(PLUGINS_DIR):
+    @staticmethod
+    def load_plugins():
+        if not path.exists(PLUGINS_DIR):
             raise FileNotFoundError(f"Plugins directory '{PLUGINS_DIR}' does not exist.")
         
-        for file in os.listdir(PLUGINS_DIR):
+        for file in listdir(PLUGINS_DIR):
             if file.endswith(".py") and not file == "__init__.py":
                 plugin_name = file[:-3]
                 print(f"Loading plugin: {plugin_name}")
 
                 # Import the Plugin Class
-                plugin = importlib.import_module(f"plugins.{plugin_name}")
+                plugin = import_module(f"plugins.{plugin_name}")
                 plugin_class = getattr(plugin, "Plugin", None)
 
                 print(f"Plugin Name: {plugin_class.get_identifier(plugin_class)}")
-                self.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
+                PluginController.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
 
-                self.identifiers.append(plugin_class.get_identifier(plugin_class))
+                PluginController.identifiers.append(plugin_class.get_identifier(plugin_class))
 
-    def set_active_plugin(self, identifier):
-        if identifier in self.plugins:
-            self.active_plugin = self.plugins[identifier]
-        else:
-            raise ValueError(f"Plugin with identifier '{identifier}' not found.")
-        
-    def get_active_identifier(self):
-        if self.active_plugin:
-            return self.active_plugin.get_identifier(self.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-        
-    def get_active_description(self):
-        if self.active_plugin:
-            return self.active_plugin.get_description(self.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-        
-    def active_startup(self):
-        if self.active_plugin:
-            self.active_plugin.startup(self.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-        
-    def active_execute(self):
-        if self.active_plugin:
-            self.active_plugin.execute(self.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-        
-    def active_shutdown(self):
-        if self.active_plugin:
-            self.active_plugin.shutdown(self.active_plugin)
-        else:
-            raise ValueError("No active plugin set.")
-
-    def get_plugin(self, identifier):
-        if identifier in self.plugins:
-            return self.plugins[identifier]
+    @staticmethod
+    def set_active_plugin(identifier):
+        if identifier in PluginController.plugins:
+            PluginController.active_plugin = PluginController.get_plugin(identifier)
         else:
             raise ValueError(f"Plugin with identifier '{identifier}' not found.")
 
-    def list_identifiers(self):
-        return self.identifiers
+    @staticmethod    
+    def get_active_identifier():
+        if PluginController.active_plugin:
+            return PluginController.active_plugin.get_identifier(PluginController.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
 
-    def list_active_commands(self):
-        if self.active_plugin:
-            return self.active_plugin.register_commands(self.active_plugin)
+    @staticmethod    
+    def get_active_description():
+        if PluginController.active_plugin:
+            return PluginController.active_plugin.get_description(PluginController.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+
+    @staticmethod    
+    def active_startup():
+        if PluginController.active_plugin:
+            PluginController.active_plugin.startup(PluginController.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+
+    @staticmethod    
+    def active_execute():
+        if PluginController.active_plugin:
+            PluginController.active_plugin.execute(PluginController.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+
+    @staticmethod    
+    def active_shutdown():
+        if PluginController.active_plugin:
+            PluginController.active_plugin.shutdown(PluginController.active_plugin)
+        else:
+            raise ValueError("No active plugin set.")
+
+    @staticmethod
+    def get_plugin(identifier):
+        if identifier in PluginController.plugins:
+            return PluginController.plugins[identifier]
+        else:
+            raise ValueError(f"Plugin with identifier '{identifier}' not found.")
+
+    @staticmethod
+    def list_identifiers():
+        return PluginController.identifiers
+
+    @staticmethod
+    def list_active_commands():
+        if PluginController.active_plugin:
+            return PluginController.active_plugin.register_commands()
         else:
             raise ValueError("No active plugin set.")
 
@@ -118,8 +125,7 @@ def main():
     sst = speech.sst
 
     # Initialize Plugin Controller
-    controller = PluginController()
-    controller.load_plugins()
+    PluginController.load_plugins()
 
     Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
 
@@ -127,7 +133,11 @@ def main():
         try:
             if idenfify_wakeword():
                 command = sst().lower()
-                process_command(command, controller)
+                try:
+                    process_command(command)
+                except Exception as e: 
+                    print(f"Error processing command: {e}")
+                    Output.tts("An error occurred while processing your command.", Output.RED)
         except Exception as e:
             print(f"Error during wake word detection: {e}")
 
@@ -164,7 +174,7 @@ def idenfify_wakeword() -> bool:
             if prediction["hey_jarvis"] > 0.5:
                 return True
             else:
-                time.sleep(0.1)
+                sleep(0.1)
     except KeyboardInterrupt:
         Output.tts("Exiting amalgam.")
 
@@ -174,7 +184,7 @@ def idenfify_wakeword() -> bool:
 
         exit(0)
 
-def process_command(command: str, plugin_controller: PluginController):
+def process_command(command: str):
     """
     Process the command and execute the corresponding plugin action.
     """
@@ -182,11 +192,11 @@ def process_command(command: str, plugin_controller: PluginController):
     identified_command = identify_command(command)
 
     # Check if the identified command matches any plugin identifier
-    if identified_command in plugin_controller.list_identifiers():
-        plugin_controller.set_active_plugin(identified_command)
-        plugin_controller.active_startup()
-        plugin_controller.active_execute()
-        plugin_controller.active_shutdown()
+    if identified_command in PluginController.list_identifiers():
+        PluginController.set_active_plugin(identified_command)
+        PluginController.active_startup()
+        PluginController.active_execute()
+        PluginController.active_shutdown()
     elif not identified_command == "unknown":
         print(f"No matching plugin found for command: {command}")
 
@@ -194,7 +204,7 @@ def identify_command(command: str) -> str:
     """
     Identify the command using the trained model.
     """
-    model_path = os.path.join(MODEL_DATA_DIR, "output", "model-last")
+    model_path = path.join(MODEL_DATA_DIR, "output", "model-last")
 
     nlp_trained = spacy.load(model_path)
     doc = nlp_trained(command)
@@ -212,19 +222,17 @@ def hash_check() -> bool:
     Compares the current hash of the plugins directory with the stored hash in config_data.
     In the event of a mismatch, it updates the config_data with the new hash.
     """
-    global config_data
-    from dirhash import dirhash
-
     computed_hash = dirhash(PLUGINS_DIR, "sha256", match="*.py", ignore = ["__pycache__", "__init__.py"]) 
 
-    print("Config Data: ", config_data)
+    print("Config Data: ", Config.get_data_full())
     print("Plugins Directory Hash: ", computed_hash)
 
-    if not config_data["plugin_hash"] == computed_hash:
+    if not Config.get_data("plugin_hash") == computed_hash:
         print("Plugin hash mismatch. Reinitializing plugins...")
-        config_data["plugin_hash"] = computed_hash
-        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
-            f.write(json.dumps(config_data))
+
+        Config.set_data("plugin_hash", computed_hash)
+        Config.save_data(CONFIG_FILE)
+
         return False
     
     return True
@@ -233,25 +241,25 @@ def setup():
     """
     Setup function to initialize directories, load configuration, and train the model if necessary.
     """
-    global config_data
     
     # Create Directories
-    os.makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
-    os.makedirs(PLUGINS_DIR, exist_ok = True)
-    os.makedirs(MODEL_DATA_DIR, exist_ok = True)
+    makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
+    makedirs(PLUGINS_DIR, exist_ok = True)
+    makedirs(MODEL_DATA_DIR, exist_ok = True)
 
-    if not os.path.exists(os.path.join(PLUGINS_DIR, "__init__.py")):
-        with open(os.path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
+    # Create Required Files
+    if not path.exists(path.join(PLUGINS_DIR, "__init__.py")):
+        with open(path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
 
-    if not os.path.exists(os.path.join(USER_DATA_DIR, "config.json")):
-        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
+    if not path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "w") as f:
             f.write("{}")
- 
-    config_data = load_config(os.path.join(USER_DATA_DIR, "config.json"))
     
-    # Train Amalgam if File is Missing
-    if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
+    Config.init(CONFIG_FILE)
+    
+    # Train Amalgam if File is Invalid or does not exist
+    if not path.exists(path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
         print("Current Model Invalid. Training the model...")
         from src.trainer import train_model, generate_model_data
 
