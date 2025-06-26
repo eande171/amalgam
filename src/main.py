@@ -1,6 +1,5 @@
 import os
 import importlib
-import json
 import time
 
 from openwakeword.model import Model
@@ -12,7 +11,7 @@ import numpy as np
 import spacy
 
 from src.speech_recognition.stt_tts import Speech, Output
-from src.config import load_config
+from src.config import Config
 
 # Constants
 SOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,12 +24,11 @@ PLUGIN_CONFIG_DIR = os.path.join(USER_DATA_DIR, "plugin_config")
 
 VOSK_MODEL_DIR = os.path.join(SOURCE_DIR, "speech_recognition", "model")
 
+CONFIG_FILE = os.path.join(USER_DATA_DIR, "config.json")
+
 download_models(["hey_jarvis"])
 model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
-# Global Variables
-config_data = {}
-active_application = "Spotify"
 
 class PluginController:
     def __init__(self):
@@ -127,7 +125,11 @@ def main():
         try:
             if idenfify_wakeword():
                 command = sst().lower()
-                process_command(command, controller)
+                try:
+                    process_command(command, controller)
+                except e: 
+                    print(f"Error processing command: {e}")
+                    Output.tts("An error occurred while processing your command.", Output.RED)
         except Exception as e:
             print(f"Error during wake word detection: {e}")
 
@@ -212,19 +214,19 @@ def hash_check() -> bool:
     Compares the current hash of the plugins directory with the stored hash in config_data.
     In the event of a mismatch, it updates the config_data with the new hash.
     """
-    global config_data
     from dirhash import dirhash
 
     computed_hash = dirhash(PLUGINS_DIR, "sha256", match="*.py", ignore = ["__pycache__", "__init__.py"]) 
 
-    print("Config Data: ", config_data)
+    print("Config Data: ", Config.get_data_full())
     print("Plugins Directory Hash: ", computed_hash)
 
-    if not config_data["plugin_hash"] == computed_hash:
+    if not Config.get_data("plugin_hash") == computed_hash:
         print("Plugin hash mismatch. Reinitializing plugins...")
-        config_data["plugin_hash"] = computed_hash
-        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
-            f.write(json.dumps(config_data))
+
+        Config.set_data("plugin_hash", computed_hash)
+        Config.save_data(CONFIG_FILE)
+
         return False
     
     return True
@@ -233,24 +235,24 @@ def setup():
     """
     Setup function to initialize directories, load configuration, and train the model if necessary.
     """
-    global config_data
     
     # Create Directories
     os.makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
     os.makedirs(PLUGINS_DIR, exist_ok = True)
     os.makedirs(MODEL_DATA_DIR, exist_ok = True)
 
+    # Create Required Files
     if not os.path.exists(os.path.join(PLUGINS_DIR, "__init__.py")):
         with open(os.path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
 
-    if not os.path.exists(os.path.join(USER_DATA_DIR, "config.json")):
-        with open(os.path.join(USER_DATA_DIR, "config.json"), "w") as f:
+    if not os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "w") as f:
             f.write("{}")
- 
-    config_data = load_config(os.path.join(USER_DATA_DIR, "config.json"))
     
-    # Train Amalgam if File is Missing
+    Config.init(CONFIG_FILE)
+    
+    # Train Amalgam if File is Invalid or does not exist
     if not os.path.exists(os.path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
         print("Current Model Invalid. Training the model...")
         from src.trainer import train_model, generate_model_data
