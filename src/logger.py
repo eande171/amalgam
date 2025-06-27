@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 from os import path, makedirs
+from src.config import Config
 
 # Logger Console Colours
 CYAN = "\033[0;36m"
@@ -56,9 +57,16 @@ def setup_logging():
 
     # Logs in Console
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(console_formatter)
 
+    try:
+        if Config.get_nested_data(["debug_logs", "console"]):
+            console_handler.setLevel(logging.DEBUG)
+        else:
+            console_handler.setLevel(logging.INFO)
+    except AttributeError:
+        console_handler.setLevel(logging.INFO)
+    
+    console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)
     
     # Logs in Files
@@ -68,9 +76,16 @@ def setup_logging():
         interval=1,
         backupCount=7
     )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
 
+    try:
+        if Config.get_nested_data(["debug_logs", "console"]):
+            file_handler.setLevel(logging.DEBUG)
+        else:
+            file_handler.setLevel(logging.INFO)
+    except AttributeError:
+        file_handler.setLevel(logging.DEBUG)
+
+    file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
 
     root_logger.info("Logger Activated")

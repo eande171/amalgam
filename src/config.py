@@ -5,22 +5,27 @@ class Config:
     """
     Global configuration data for Amalgam.
     """
-    config_data = {}
+    _config_data = {}
     
-    default_config = {
+    _default_config = {
         "plugin_hash": "",
+        "deafened": False,
+        "debug_logs": {
+            "console": False,
+            "file": True
+        }
     }
 
     @staticmethod
-    def load_config(default: object, config_path: str) -> object:
+    def load_config(default: dict, config_path: str) -> dict:
         """Load configuration from config.json or returns default values.
         
             Args:
-                default (object): Default configuration values.
+                default (dict): Default configuration values.
                 config_path (str): Path to the configuration file.
 
             Returns:
-                object: Merged configuration data.
+                dict: Merged configuration data.
         """
 
         config = {}
@@ -44,16 +49,16 @@ class Config:
         return config
 
     @staticmethod
-    def merge_config(default: object, config: object) -> object:
+    def merge_config(default: dict, config: dict) -> dict:
         """
         Merges two configuration dictionaries, with the second overriding the first.
 
         Args:
-            default (object): The default configuration dictionary.
-            config (object): The configuration dictionary to merge with the default.
+            default (dict): The default configuration dictionary.
+            config (dict): The configuration dictionary to merge with the default.
 
         Returns:
-            object: The merged configuration dictionary.
+            dict: The merged configuration dictionary.
         """
         merged = default.copy()
         for key, value in config.items():
@@ -71,18 +76,18 @@ class Config:
         Args:
             config_path (str): Path to the configuration file.
         """
-        Config.config_data = Config.load_config(Config.default_config, config_path)
+        Config._config_data = Config.load_config(Config._default_config, config_path)
 
     @staticmethod
-    def set_data(key: str, value: object) -> None:
+    def set_data(key: str, value: dict) -> None:
         """
         Set a specific configuration value by key.
         
         Args:
             key (str): The key for the configuration value.
-            value (object): The value to set for the specified key.
+            value (dict): The value to set for the specified key.
         """
-        Config.config_data[key] = value
+        Config._config_data[key] = value
 
     @staticmethod
     def save_data(config_path: str) -> None:
@@ -94,22 +99,22 @@ class Config:
         """
         try:
             with open(config_path, "w") as file:
-                json.dump(Config.config_data, file, indent=4)
+                json.dump(Config._config_data, file, indent=4)
         except Exception as e:
             print(f"Error saving configuration data to {config_path}: {e}")
 
     @staticmethod
-    def get_data_full() -> object:
+    def get_data_full() -> dict:
         """
         Get the full configuration data.
         
         Returns:
-            object: The full configuration data.
+            dict: The full configuration data.
         """
-        return Config.config_data
+        return Config._config_data
     
     @staticmethod
-    def get_data(key: str) -> object:
+    def get_data(key: str) -> dict:
         """
         Get a specific configuration value by key.
         
@@ -117,6 +122,15 @@ class Config:
             key (str): The key for the configuration value.
 
         Returns:
-            object: The configuration value for the specified key.
+            dict: The configuration value for the specified key.
         """
-        return Config.config_data.get(key, None)
+        return Config._config_data.get(key, None)
+    
+    @staticmethod
+    def get_nested_data(keys: list) -> dict:
+        current_data = Config.get_data_full()
+        for key in keys:
+            current_data = current_data.get(key, None)
+
+        return current_data
+
