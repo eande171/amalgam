@@ -24,7 +24,7 @@ def generate_model_data():
             cats[identifier] = True
             spacy_train_data.append((command, {"cats": cats}))
 
-    print("Data: ", spacy_train_data)
+    # print("Data: ", spacy_train_data)
 
     updated_spacy_train_data = []
     for text, annotations in spacy_train_data:

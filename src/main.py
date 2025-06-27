@@ -45,7 +45,7 @@ def main():
 
     while True:
         try:
-            if idenfify_wakeword():
+            if idenfify_wakeword() or Config.get_data("deafened"):
                 command = Input.sst().lower()
                 try:
                     process_command(command)
@@ -59,6 +59,9 @@ def idenfify_wakeword() -> bool:
     """
     Returns True if the wake word "hey jarvis" is detected. Will run indefinitely until the wake word is detected.
     """
+    if Config.get_data("deafened"):
+        return False
+
     # Config
     RATE = 16000  # openWakeWord and SpeechRecognition typically use 16kHz
     CHUNK_SIZE_WW = 1280 # Frame length for openWakeWord (16000 * 0.080s)
@@ -185,4 +188,6 @@ def setup():
 
 if __name__ == "__main__":
     main()
+
+
 

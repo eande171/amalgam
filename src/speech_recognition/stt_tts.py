@@ -9,6 +9,8 @@ import pyaudio
 
 import speech_recognition as sr
 
+from src.config import Config 
+
 logger = logging.getLogger(__name__)
 
 class Input():
@@ -27,17 +29,23 @@ class Input():
             logger.critical("Vosk model is missing. Cannot start Amalgam")
             raise FileNotFoundError(f"Vosk model not found at {VOSK_MODEL_DIR}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
 
+        SetLogLevel(-1)
+        
         Input._vosk_model = Model(VOSK_MODEL_DIR)
         Input._kaldi = KaldiRecognizer(Input._vosk_model, 16000)
 
         logger.info("Adjusting for ambient noise... Please be quiet.")
-        with sr.Microphone() as source:
-            Input._r.adjust_for_ambient_noise(source, duration=0.5)
+
+        try:
+            with sr.Microphone() as source:
+                Input._r.adjust_for_ambient_noise(source, duration=0.5)
+        except OSError as e:
+            Config.set_data("deafened", True)
+            logger.warning(f"Microphone is not detected. Amalgam has been set to deafened (text only mode): {e}")
 
         Input._r.pause_threshold += 0.8
         Input._r.non_speaking_duration += 0.8
 
-        SetLogLevel(-1)
 
     @staticmethod
     def recognise_vosk(audio):
@@ -51,6 +59,10 @@ class Input():
     @staticmethod
     def sst() -> str:
         """Speech To Text"""
+        if Config.get_data("deafened"):
+            text = input("You: ")
+            return text
+
         with sr.Microphone() as source:
             print("Listening...")
             Output.play_blip()
