@@ -9,6 +9,7 @@ class Config:
     
     _default_config = {
         "plugin_hash": "",
+        "muted": False,
         "deafened": False,
         "debug_logs": {
             "console": False,
@@ -128,6 +129,15 @@ class Config:
     
     @staticmethod
     def get_nested_data(keys: list) -> dict:
+        """
+        Get a specific configuration value by a list of keys.
+        
+        Args:
+            keys (list): The list of keys for the configuration value.
+
+        Returns:
+            dict: The configuration value for the specified key.
+        """
         current_data = Config.get_data_full()
         for key in keys:
             current_data = current_data.get(key, None)

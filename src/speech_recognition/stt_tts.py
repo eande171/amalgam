@@ -26,11 +26,13 @@ class Input():
         from src.main import VOSK_MODEL_DIR
 
         if not path.exists(VOSK_MODEL_DIR):
-            logger.critical("Vosk model is missing. Cannot start Amalgam")
+            logger.critical("Vosk model is missing. Cannot start Amalgam speech recognition. Consider changing 'deafened' to True to disable speech recognition.")
             raise FileNotFoundError(f"Vosk model not found at {VOSK_MODEL_DIR}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
 
         SetLogLevel(-1)
         
+        logger.info("Initialising Vosk Model...")
+
         Input._vosk_model = Model(VOSK_MODEL_DIR)
         Input._kaldi = KaldiRecognizer(Input._vosk_model, 16000)
 
@@ -91,7 +93,10 @@ class Output():
     @staticmethod
     def tts(text: str, colour: str = "\033[0m"):
         """Text to Speech"""
-        print(f"Amalgam: {colour} {text}\033[0m")
+        if Config.get_data("muted"):
+            return
+
+        logger.info(f"Amalgam: {colour} {text}\033[0m")
         Output._tts_engine.say(text)
         Output._tts_engine.runAndWait()
 
@@ -134,6 +139,9 @@ class Output():
     @staticmethod
     def play_sound(sound_data):
         """Play sound data using PyAudio"""
+        if Config.get_data("muted"):
+            return
+
         p = pyaudio.PyAudio()
 
         stream = p.open(format=pyaudio.paFloat32, channels=1, rate=44100, output=True)
