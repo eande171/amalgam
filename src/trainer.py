@@ -5,6 +5,7 @@ import random
 import spacy
 from spacy.tokens import DocBin
 from src.plugin import PluginController
+import logging
 
 # Get Sentence Data
 def generate_model_data():
@@ -16,7 +17,7 @@ def generate_model_data():
         PluginController.set_active_plugin(identifier)
         commands = PluginController.list_active_commands()
 
-        print(f"Processing plugin: {identifier} with commands: {commands}")
+        logging.debug(f"Processing plugin: {identifier} with commands: {commands}")
 
         for command in commands:
             cats = {label: False for label in all_labels}
@@ -75,7 +76,7 @@ def generate_model_data():
     test_doc_bin = convert_to_docbin(test_data)
     test_doc_bin.to_disk(os.path.join("model_data", "dev.spacy"))
 
-    print("Training data and test data saved to 'model_data/train.spacy' and 'model_data/dev.spacy' respectively.")
+    logging.info("Training data and test data saved to 'model_data/train.spacy' and 'model_data/dev.spacy' respectively.")
 
 # Train the model
 def train_model():
@@ -89,8 +90,9 @@ def train_model():
             "--optimize", "efficiency", "--force"
         ])
     except subprocess.CalledProcessError as e:
-        print(f"Error initializing config: {e}")
+        logging.error(f"Error initializing config: {e}")
         return
+    
 
     try:
         subprocess.run([
@@ -101,6 +103,5 @@ def train_model():
             "--paths.dev", "model_data/dev.spacy"
         ])
     except subprocess.CalledProcessError as e:
-        print(f"Error training model: {e}")
-        # print(f"Output Error: {e.returncode}")
+        logging.error(f"Error training model: {e}")
         return

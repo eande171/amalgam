@@ -1,6 +1,11 @@
+import logging
+from src.speech_recognition.stt_tts import Output
+
 from abc import ABC, abstractmethod
 from os import path, listdir
 from importlib import import_module
+
+logger = logging.getLogger(__name__)
 
 # Plugin Class
 class Plugin(ABC):
@@ -44,18 +49,19 @@ class PluginController:
         from src.main import PLUGINS_DIR
 
         if not path.exists(PLUGINS_DIR):
+            logger.critical("Plugins directory is missing. Cannot load plugins.")
             raise FileNotFoundError(f"Plugins directory '{PLUGINS_DIR}' does not exist.")
         
         for file in listdir(PLUGINS_DIR):
             if file.endswith(".py") and not file == "__init__.py":
                 plugin_name = file[:-3]
-                print(f"Loading plugin: {plugin_name}")
+                logger.info(f"Loading plugin: {Output.BLUE} {plugin_name}")
 
                 # Import the Plugin Class
                 plugin = import_module(f"plugins.{plugin_name}")
                 plugin_class = getattr(plugin, "Plugin", None)
 
-                print(f"Plugin Name: {plugin_class.get_identifier(plugin_class)}")
+                logger.debug(f"Plugin Name: {plugin_class.get_identifier(plugin_class)}")
                 PluginController.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
 
                 PluginController.identifiers.append(plugin_class.get_identifier(plugin_class))

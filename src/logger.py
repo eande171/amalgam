@@ -30,6 +30,15 @@ class ConsoleFormatter(logging.Formatter):
 
         return f"{log_colour}{formatted}{RESET}"
 
+class ExcludeModuleFilter(logging.Filter):
+    def __init__(self, excluded_module: str, name = ""):
+        super().__init__(name)
+        self.excluded_module = excluded_module
+
+    def filter(self, record):
+        return not record.name.startswith(self.excluded_module)
+        
+
 def setup_logging():
     from src.main import LOG_DIR
 
@@ -42,11 +51,14 @@ def setup_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
+    # Define Filter
+    filter = ExcludeModuleFilter("comtypes")
+
     # Handle Formatting
     date_format = "%Y-%m-%d %H:%M:%S"
 
     console_formatter = ConsoleFormatter(
-        "%(levelname)s: %(message)s",
+        f"%(levelname)s: {RESET} %(message)s",
         datefmt=date_format
     )
 
@@ -67,14 +79,15 @@ def setup_logging():
         console_handler.setLevel(logging.INFO)
     
     console_handler.setFormatter(console_formatter)
+    console_handler.addFilter(filter)
     root_logger.addHandler(console_handler)
     
     # Logs in Files
     file_handler = logging.handlers.TimedRotatingFileHandler(
         path.join(LOG_DIR, "amalgam.log"),
-        when="midnight",
-        interval=1,
-        backupCount=7
+        when="M",
+        interval=30,
+        backupCount=6
     )
 
     try:
@@ -86,6 +99,7 @@ def setup_logging():
         file_handler.setLevel(logging.DEBUG)
 
     file_handler.setFormatter(formatter)
+    file_handler.addFilter(filter)
     root_logger.addHandler(file_handler)
 
     root_logger.info("Logger Activated")

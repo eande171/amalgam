@@ -1,6 +1,7 @@
 from os import path, makedirs
 from time import sleep
 from dirhash import dirhash
+import logging
 
 from openwakeword.model import Model
 from openwakeword.utils import download_models
@@ -33,15 +34,20 @@ model = Model(["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5)
 
 from src.plugin import PluginController
 
+logger = logging.getLogger(__name__)
+
 def main():
     """
     Main Amalgam Loop. Configures Setup and SST. Processes Commands after Hearing Wakeword.
     """
     setup_logging()
-    setup()
-    Input.setup()
 
-    Output.tts("Amalgam is ready to receive commands.", Output.BLUE)
+    setup()
+
+    if not Config.get_data("deafened"):
+        Input.setup()
+
+    Output.tts("Amalgam is ready to receive commands.", Output.GREEN)
 
     while True:
         try:
@@ -50,10 +56,10 @@ def main():
                 try:
                     process_command(command)
                 except Exception as e: 
-                    print(f"Error processing command: {e}")
+                    logger.error(f"Error processing command: {e}")
                     Output.tts("An error occurred while processing your command.", Output.RED)
         except Exception as e:
-            print(f"Error during wake word detection: {e}")
+            logger.error(f"Error during wake word detection: {e}")
 
 def idenfify_wakeword() -> bool:
     """
@@ -83,7 +89,6 @@ def idenfify_wakeword() -> bool:
         while True:
             audio_data = stream.read(CHUNK_SIZE_WW, exception_on_overflow=False)
             audio_array = np.frombuffer(audio_data, dtype=np.int16)
-            # print("Model Prediction: ", model.predict(audio_array))
 
             prediction = model.predict(audio_array,
                                        threshold={"hey_jarvis": 0.5},
@@ -114,8 +119,8 @@ def process_command(command: str):
         PluginController.active_startup()
         PluginController.active_execute()
         PluginController.active_shutdown()
-    elif not identified_command == "unknown":
-        print(f"No matching plugin found for command: {command}")
+    elif identified_command == "unknown":
+        logger.info(f"No matching plugin found for command: {command}")
 
 def identify_command(command: str) -> str:
     """
@@ -127,7 +132,7 @@ def identify_command(command: str) -> str:
     doc = nlp_trained(command)
     confidence = max(doc.cats, key=doc.cats.get)
 
-    print(f"Identified command: {confidence} with confidence value: {doc.cats[confidence]}")
+    logger.info(f"Identified command: {confidence} with confidence value: {doc.cats[confidence]}")
     if doc.cats[confidence] > 0.5:
         return confidence
     else:
@@ -141,11 +146,11 @@ def hash_check() -> bool:
     """
     computed_hash = dirhash(PLUGINS_DIR, "sha256", match="*.py", ignore = ["__pycache__", "__init__.py"]) 
 
-    print("Config Data: ", Config.get_data_full())
-    print("Plugins Directory Hash: ", computed_hash)
+    logger.debug(f"Config Data: {Config.get_data_full()}")
+    logger.debug(f"Plugins Directory Hash: {computed_hash}")
 
     if not Config.get_data("plugin_hash") == computed_hash:
-        print("Plugin hash mismatch. Reinitializing plugins...")
+        logger.info("Plugin hash mismatch. Reinitializing plugins...")
 
         Config.set_data("plugin_hash", computed_hash)
         Config.save_data(CONFIG_FILE)
@@ -176,11 +181,9 @@ def setup():
     Config.init(CONFIG_FILE)
     PluginController.load_plugins()
 
-    print("ID before training", PluginController.list_identifiers())
-
     # Train Amalgam if File is Invalid or does not exist
     if not path.exists(path.join(MODEL_DATA_DIR, "output", "model-last")) or not hash_check():
-        print("Current Model Invalid. Training the model...")
+        logger.info("Current Model Invalid. Training the model...")
         from src.trainer import train_model, generate_model_data
 
         generate_model_data()
@@ -188,6 +191,5 @@ def setup():
 
 if __name__ == "__main__":
     main()
-
 
 
