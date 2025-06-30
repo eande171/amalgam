@@ -26,6 +26,8 @@ PLUGINS_DIR = path.join(CORE_DIR, "plugins")
 
 VOSK_MODEL_DIR = path.join(SOURCE_DIR, "speech_recognition", "model")
 
+LLM_TOOL_DIR = path.join(LLM_DATA_DIR, "tools")
+
 PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
 CONFIG_FILE = path.join(USER_DATA_DIR, "config.json")
 LOG_DIR = path.join(USER_DATA_DIR, "logs")
@@ -169,7 +171,7 @@ def setup():
     makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
     makedirs(PLUGINS_DIR, exist_ok = True)
     makedirs(MODEL_DATA_DIR, exist_ok = True)
-    makedirs(LLM_DATA_DIR, exist_ok = True)
+    makedirs(LLM_TOOL_DIR, exist_ok = True)
 
     # Create Required Files
     if not path.exists(path.join(PLUGINS_DIR, "__init__.py")):
