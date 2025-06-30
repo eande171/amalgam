@@ -1,7 +1,7 @@
 from src.plugin import Plugin
 from src.speech_recognition.stt_tts import Output
 
-class Plugin(Plugin):
+class Stop(Plugin):
     def startup(self):
         pass
 

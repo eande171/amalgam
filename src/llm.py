@@ -1,8 +1,14 @@
 import logging
+import subprocess
+import importlib
+import inspect
+
+from os import path, listdir
 
 import lmstudio as lms
+
 from src.config import Config
-import subprocess
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +25,7 @@ def lm_server_handler(func):
 
     return wrapper
 
-class LLM():
+class LLM:
     ai_data = Config.get_data("ai_config")
     local_address = "localhost:" + ai_data["port"]
 
@@ -68,3 +74,22 @@ class LLM():
         with lms.Client(LLM.local_address) as client:
             model = client.llm.model(LLM.ai_data["model"])
             return model.respond(query, response_format=format)
+
+    @staticmethod
+    def get_tools(directory: str) -> list:
+        if not path.exists(directory):
+            logger.error(f"{directory} is missing. Cannot load tools.")
+            raise FileNotFoundError(f"Directory '{directory}' does not exist.")
+        
+        tools = []
+
+        for file in listdir(directory):
+            if file.endswith(".py") and not file == "__init__.py":
+                tool_name = file[:-3]
+                logger.debug(f"Loading tool: {tool_name}")
+
+                module = importlib.import_module(f"llm_data.tools.{tool_name}")
+
+                for name, obj in inspect.getmembers(module):
+                    if inspect.isfunction(obj) and not name.startswith('_'):
+                        tools.append(obj)

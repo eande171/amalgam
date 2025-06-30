@@ -4,6 +4,7 @@ from src.speech_recognition.stt_tts import Output
 from abc import ABC, abstractmethod
 from os import path, listdir
 from importlib import import_module
+import inspect
 
 logger = logging.getLogger(__name__)
 
@@ -57,14 +58,16 @@ class PluginController:
                 plugin_name = file[:-3]
                 logger.info(f"Loading plugin: {Output.BLUE} {plugin_name}")
 
-                # Import the Plugin Class
-                plugin = import_module(f"plugins.{plugin_name}")
-                plugin_class = getattr(plugin, "Plugin", None)
+                module = import_module(f"plugins.{plugin_name}")
 
-                logger.debug(f"Plugin Name: {plugin_class.get_identifier(plugin_class)}")
-                PluginController.plugins[plugin_class.get_identifier(plugin_class)] = plugin_class
+                for name, obj in inspect.getmembers(module):
+                    if inspect.isclass(obj):
+                        if issubclass(obj, Plugin) and obj is not Plugin:
+                            logger.info(f"Loading plugin:   {Output.BLUE} {name}{Output.RESET} from {obj}")
 
-                PluginController.identifiers.append(plugin_class.get_identifier(plugin_class))
+                            PluginController.plugins[obj.get_identifier(obj)] = obj
+
+                            PluginController.identifiers.append(obj.get_identifier(obj))
 
     @staticmethod
     def set_active_plugin(identifier):
