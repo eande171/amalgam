@@ -6,3 +6,4 @@ spacy==3.8.7
 dirhash==0.5.0
 pyautogui==0.9.54
 openwakeword==0.6.0
+lmstudio==1.4.0

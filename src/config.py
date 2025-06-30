@@ -14,6 +14,11 @@ class Config:
         "debug_logs": {
             "console": False,
             "file": True
+        },
+        "ai_enabled": False,
+        "ai_config": {
+            "port": "1234",
+            "model": "",
         }
     }
 
