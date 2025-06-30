@@ -19,7 +19,10 @@ class Config:
         "ai_config": {
             "port": "1234",
             "model": "",
-        }
+        },
+        "ignore_words": [
+            "the"
+        ]    # Ignore Words Commonly Misdetected During Silence. Only ignores word if it's alone.
     }
 
     @staticmethod

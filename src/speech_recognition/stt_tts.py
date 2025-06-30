@@ -50,7 +50,7 @@ class Input():
 
 
     @staticmethod
-    def recognise_vosk(audio):
+    def recognise_vosk(audio) -> str:
         """Recognize speech using Vosk"""
         Input._kaldi.AcceptWaveform(audio.get_raw_data(convert_rate=16000, convert_width=2))
         result = Input._kaldi.FinalResult()
@@ -75,6 +75,12 @@ class Input():
             try:
                 text = Input.recognise_vosk(audio)
                 logger.info(f"You: {text}")
+
+                for word in Config.get_data("ignore_words"):
+                    if text.lower() == word:
+                        logger.info("Word Ignored")
+                        return ""
+
                 return text
             except sr.UnknownValueError:
                 logger.error("Unclear audio input. Amalgam does not know what was said.")

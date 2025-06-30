@@ -69,13 +69,6 @@ class LLM:
         LLM._silent_run(["lms", "server", "stop"])
 
     @staticmethod
-    @lm_server_handler
-    def query(query, format = None) -> str:
-        with lms.Client(LLM.local_address) as client:
-            model = client.llm.model(LLM.ai_data["model"])
-            return model.respond(query, response_format=format)
-
-    @staticmethod
     def get_tools(directory: str) -> list:
         if not path.exists(directory):
             logger.error(f"{directory} is missing. Cannot load tools.")
@@ -93,3 +86,24 @@ class LLM:
                 for name, obj in inspect.getmembers(module):
                     if inspect.isfunction(obj) and not name.startswith('_'):
                         tools.append(obj)
+
+        return tools
+
+    @staticmethod
+    @lm_server_handler
+    def query(query, format = None) -> str:
+        with lms.Client(LLM.local_address) as client:
+            model = client.llm.model(LLM.ai_data["model"])
+            return model.respond(query, response_format=format)
+
+    @staticmethod
+    @lm_server_handler
+    def query_with_tools(query, tools) -> str:
+        with lms.Client(LLM.local_address) as client:
+            model = client.llm.model(LLM.ai_data["model"])
+            model.act(
+                query,
+                tools,
+                on_prediction_completed=print
+            )
+            
