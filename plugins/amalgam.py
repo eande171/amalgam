@@ -48,6 +48,7 @@ class UseAI(Plugin):
     def startup(self):
         global using_ai
         using_ai = True
+        Output.tts("AI Mode Activated.")
     
     def execute(self):
         global using_ai
@@ -56,7 +57,7 @@ class UseAI(Plugin):
                 if idenfify_wakeword() or Config.get_data("deafened"):
                     text = Input.sst().lower()
                     if text:
-                        LLM.query_with_tools("For the following input, think about what plugin identifier do I need for each command? Then please add the plugin to the queue. Think step by step. Input: " + text, LLM.get_tools(LLM_TOOL_DIR))
+                        LLM.query_with_tools("For the following input, use a tool to determine what plugin identifier is needed for each command? Then please add the plugin to the queue. Think step by step. Input: " + text, LLM.get_tools(LLM_TOOL_DIR))
 
                         from llm_data.tools.plugins import plugin_queue
 
@@ -87,7 +88,9 @@ class UseAI(Plugin):
             "Can you enable AI for me?",
             "Please switch to AI-powered plugin execution.",
             "Let's use AI for running plugins.",
-            "Turn on AI capabilities."
+            "Turn on AI capabilities.",
+            "Use AI from now on.",
+            "Use AI",
         ]
     
     def get_description(self):

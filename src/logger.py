@@ -51,8 +51,9 @@ def setup_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
-    # Define Filter
-    filter = ExcludeModuleFilter("comtypes")
+    # Define Filters
+    comtypes_filter = ExcludeModuleFilter("comtypes")
+    websockets_filter = ExcludeModuleFilter("AsyncWebsocketHandler")
 
     # Handle Formatting
     date_format = "%Y-%m-%d %H:%M:%S"
@@ -79,7 +80,8 @@ def setup_logging():
         console_handler.setLevel(logging.INFO)
     
     console_handler.setFormatter(console_formatter)
-    console_handler.addFilter(filter)
+    console_handler.addFilter(comtypes_filter)
+    console_handler.addFilter(websockets_filter)
     root_logger.addHandler(console_handler)
     
     # Logs in Files
@@ -99,7 +101,8 @@ def setup_logging():
         file_handler.setLevel(logging.DEBUG)
 
     file_handler.setFormatter(formatter)
-    file_handler.addFilter(filter)
+    file_handler.addFilter(comtypes_filter)
+    file_handler.addFilter(websockets_filter)
     root_logger.addHandler(file_handler)
 
     root_logger.info("Logger Activated")
