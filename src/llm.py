@@ -2,7 +2,6 @@ import logging
 
 import lmstudio as lms
 from src.config import Config
-from src.main import CONFIG_FILE
 import subprocess
 
 logger = logging.getLogger(__name__)

@@ -19,13 +19,14 @@ from src.logger import setup_logging
 SOURCE_DIR = path.dirname(path.abspath(__file__))
 CORE_DIR = path.join(SOURCE_DIR, "..")
 
-PLUGINS_DIR = path.join(CORE_DIR, "plugins")
-MODEL_DATA_DIR = path.join(CORE_DIR, "model_data")
+MODEL_DATA_DIR = path.join(CORE_DIR, "intent_model_data")
 USER_DATA_DIR = path.join(CORE_DIR, "user_data")
-PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
+LLM_DATA_DIR = path.join(CORE_DIR, "llm_data")
+PLUGINS_DIR = path.join(CORE_DIR, "plugins")
 
 VOSK_MODEL_DIR = path.join(SOURCE_DIR, "speech_recognition", "model")
 
+PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
 CONFIG_FILE = path.join(USER_DATA_DIR, "config.json")
 LOG_DIR = path.join(USER_DATA_DIR, "logs")
 
@@ -168,10 +169,15 @@ def setup():
     makedirs(PLUGIN_CONFIG_DIR, exist_ok = True)
     makedirs(PLUGINS_DIR, exist_ok = True)
     makedirs(MODEL_DATA_DIR, exist_ok = True)
+    makedirs(LLM_DATA_DIR, exist_ok = True)
 
     # Create Required Files
     if not path.exists(path.join(PLUGINS_DIR, "__init__.py")):
         with open(path.join(PLUGINS_DIR, "__init__.py"), "w") as f:
+            f.write("# This file is required to treat the plugins directory as a package.\n")
+
+    if not path.exists(path.join(LLM_DATA_DIR, "__init__.py")):
+        with open(path.join(LLM_DATA_DIR, "__init__.py"), "w") as f:
             f.write("# This file is required to treat the plugins directory as a package.\n")
 
     if not path.exists(CONFIG_FILE):

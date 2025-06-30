@@ -7,6 +7,8 @@ from spacy.tokens import DocBin
 from src.plugin import PluginController
 import logging
 
+logger = logging.getLogger(__name__)
+
 # Get Sentence Data
 def generate_model_data():
     spacy_train_data = []
@@ -17,7 +19,7 @@ def generate_model_data():
         PluginController.set_active_plugin(identifier)
         commands = PluginController.list_active_commands()
 
-        logging.debug(f"Processing plugin: {identifier} with commands: {commands}")
+        logger.debug(f"Processing plugin: {identifier} with commands: {commands}")
 
         for command in commands:
             cats = {label: False for label in all_labels}
@@ -71,12 +73,12 @@ def generate_model_data():
 
     # Save Training and Test Data
     train_doc_bin = convert_to_docbin(train_data)
-    train_doc_bin.to_disk(os.path.join("model_data", "train.spacy"))
+    train_doc_bin.to_disk(os.path.join("intent_model_data", "train.spacy"))
 
     test_doc_bin = convert_to_docbin(test_data)
-    test_doc_bin.to_disk(os.path.join("model_data", "dev.spacy"))
+    test_doc_bin.to_disk(os.path.join("intent_model_data", "dev.spacy"))
 
-    logging.info("Training data and test data saved to 'model_data/train.spacy' and 'model_data/dev.spacy' respectively.")
+    logger.info("Training data and test data saved to 'intent_model_data/train.spacy' and 'intent_model_data/dev.spacy' respectively.")
 
 # Train the model
 def train_model():
@@ -85,23 +87,23 @@ def train_model():
     try:
         subprocess.run([
             python_executable, "-m", "spacy", "init", "config",
-            "model_data/config.cfg", "--lang", "en",
+            "intent_model_data/config.cfg", "--lang", "en",
             "--pipeline", "textcat",
             "--optimize", "efficiency", "--force"
         ])
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error initializing config: {e}")
+        logger.error(f"Error initializing config: {e}")
         return
     
 
     try:
         subprocess.run([
             python_executable, "-m", "spacy", "train",
-            "model_data/config.cfg",
-            "--output", "model_data/output",
-            "--paths.train", "model_data/train.spacy",
-            "--paths.dev", "model_data/dev.spacy"
+            "intent_model_data/config.cfg",
+            "--output", "intent_model_data/output",
+            "--paths.train", "intent_model_data/train.spacy",
+            "--paths.dev", "intent_model_data/dev.spacy"
         ])
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error training model: {e}")
+        logger.error(f"Error training model: {e}")
         return
