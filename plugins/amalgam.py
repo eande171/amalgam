@@ -1,4 +1,6 @@
-from src.main import LLM_TOOL_DIR, idenfify_wakeword
+from os import path
+
+from src.main import LLM_TOOL_DIR, LLM_PROMPT_DIR, idenfify_wakeword
 from src.llm import LLM
 from src.plugin import Plugin, PluginController
 from src.speech_recognition.stt_tts import Input, Output
@@ -52,14 +54,16 @@ class UseAI(Plugin):
     
     def execute(self):
         global using_ai
+        from llm_data.tools.plugins import plugin_queue
+
+        plugin_queue.clear()
         while using_ai:
             try:
                 if idenfify_wakeword() or Config.get_data("deafened"):
                     text = Input.sst().lower()
                     if text:
-                        LLM.query_with_tools("For the following input, use a tool to determine what plugin identifier is needed for each command? Then please add the plugin to the queue. Think step by step. Input: " + text, LLM.get_tools(LLM_TOOL_DIR))
-
-                        from llm_data.tools.plugins import plugin_queue
+                        # LLM.query_with_tools("For the following input, use a tool to determine what plugin identifier is needed for each command? Then please add the plugin to the queue. Think step by step. Input: " + text, LLM.get_tools(LLM_TOOL_DIR))
+                        LLM.query_with_tools(LLM.construct_chat(path.join(LLM_PROMPT_DIR, "default.md"), text), LLM.get_tools(LLM_TOOL_DIR))
 
                         print(plugin_queue)
                         run_plugin_queue(plugin_queue)

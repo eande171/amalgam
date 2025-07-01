@@ -26,6 +26,7 @@ PLUGINS_DIR = path.join(CORE_DIR, "plugins")
 
 VOSK_MODEL_DIR = path.join(SOURCE_DIR, "speech_recognition", "model")
 
+LLM_PROMPT_DIR = path.join(LLM_DATA_DIR, "prompts")
 LLM_TOOL_DIR = path.join(LLM_DATA_DIR, "tools")
 
 PLUGIN_CONFIG_DIR = path.join(USER_DATA_DIR, "plugin_config")
