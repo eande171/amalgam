@@ -8,6 +8,7 @@ from os import path, listdir
 import lmstudio as lms
 
 from src.config import Config
+from src.speech_recognition.stt_tts import Output
 
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ class LLM:
         return tools
 
     @staticmethod
-    def construct_chat(system_dir: str, user_text: str) -> lms.Chat:
+    def construct_chat(system_dir: str, user_text: str = "") -> lms.Chat:
         """
         Constructs an LM Studio chat object with a system message loaded from a file
         and an initial user message. In the event the file is missing, the default will be used.
@@ -104,24 +105,27 @@ class LLM:
             lms.Chat: A configured LM Studio chat object ready for interaction,
                     containing both the system message and the first user message.
         """
-        system_text: str = ""
-        try:
-            with open(system_dir, "r") as file:
-                system_text = file.read()
-        except FileNotFoundError:
-            logger.warning(f"File not found: {system_dir}, using default prompt.")
-        except Exception as e:
-            logger.error(f"An unhandled exception has occurred: {e}, using default prompt.")
-        finally: 
-            system_text = " # Purpose \
-                            You are an assistant similar to JARVIS. Your job is to use the tools you have available to you to assist the user as best as possible. \
+        default_prompt = "# Purpose \
+                            You are Amalgam, an assistant similar to JARVIS. Your job is to use the tools you have available to you to assist the user as best as possible. \
                             You must follow the rules at all times. Under no condition are you to break these rules. \
                             # Rules \
                             - You must not, under any circumstance, attempt to create or use a plugin that does not exist. \
                             - You should use a tool to determine what plugin identifier is needed for each command, then please add the plugin to the queue. \
                             - Think step by step. \
                             # Advice \
-                            Use the get_all_plugin_information tool to find out more about what you can control."
+                            Use the get_all_plugin_information tool to find out more about what you can control. \
+                            If someone requests you \"shut yourself down\", they are most likely asking you to run stop_self."
+
+        system_text: str = ""
+        try:
+            with open(system_dir, "r") as file:
+                system_text = file.read()
+        except FileNotFoundError:
+            logger.warning(f"File not found: {system_dir}, using default prompt.")
+            system_text = default_prompt
+        except Exception as e:
+            logger.error(f"An unhandled exception has occurred: {e}, using default prompt.")
+            system_text = default_prompt
             
         chat = lms.Chat(system_text)
         chat.add_user_message(user_text)
@@ -142,6 +146,5 @@ class LLM:
             model.act(
                 query,
                 tools,
-                on_prediction_completed=print
+                on_prediction_completed=logger.debug
             )
-            
