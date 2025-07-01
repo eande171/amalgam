@@ -85,7 +85,7 @@ class Input():
             except sr.UnknownValueError:
                 logger.error("Unclear audio input. Amalgam does not know what was said.")
                 Output.tts("Sorry, I did not understand that.")
-                raise sr.UnknownValueError("Unclear audio input")
+                return ""
 
 class Output():
     GREEN = "\033[92m"   # Success
