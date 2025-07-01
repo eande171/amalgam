@@ -57,11 +57,12 @@ def main():
         try:
             if idenfify_wakeword() or Config.get_data("deafened"):
                 command = Input.sst().lower()
-                try:
-                    process_command(command)
-                except Exception as e: 
-                    logger.error(f"Error processing command: {e}")
-                    Output.tts("An error occurred while processing your command.", Output.RED)
+                if command != "":
+                    try:
+                        process_command(command)
+                    except Exception as e: 
+                        logger.error(f"Error processing command: {e}")
+                        Output.tts("An error occurred while processing your command.", Output.RED)
         except Exception as e:
             logger.error(f"Error during wake word detection: {e}")
 
