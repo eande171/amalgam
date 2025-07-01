@@ -26,7 +26,7 @@ class Input():
         from src.main import VOSK_MODEL_DIR
 
         if not path.exists(VOSK_MODEL_DIR):
-            logger.critical("Vosk model is missing. Cannot start Amalgam speech recognition. Consider changing 'deafened' to True to disable speech recognition.")
+            logger.critical("Vosk model is missing. Cannot start Amalgam speech recognition. Consider changing 'deafened' to True in user_data/config.json to disable speech recognition.")
             raise FileNotFoundError(f"Vosk model not found at {VOSK_MODEL_DIR}. Please download the model from https://alphacephei.com/vosk/models and place the model there.")
 
         SetLogLevel(-1)
