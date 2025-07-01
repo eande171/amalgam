@@ -90,6 +90,44 @@ class LLM:
         return tools
 
     @staticmethod
+    def construct_chat(system_dir: str, user_text: str) -> lms.Chat:
+        """
+        Constructs an LM Studio chat object with a system message loaded from a file
+        and an initial user message. In the event the file is missing, the default will be used.
+
+        Args:
+            system_dir (str): The file path to the text file containing the system prompt.
+                              This prompt sets the initial behavior or persona for the AI.
+            user_text (str): The initial message from the user to start the conversation.
+
+        Returns:
+            lms.Chat: A configured LM Studio chat object ready for interaction,
+                    containing both the system message and the first user message.
+        """
+        system_text: str = ""
+        try:
+            with open(system_dir, "r") as file:
+                system_text = file.read()
+        except FileNotFoundError:
+            logger.warning(f"File not found: {system_dir}, using default prompt.")
+        except Exception as e:
+            logger.error(f"An unhandled exception has occurred: {e}, using default prompt.")
+        finally: 
+            system_text = " # Purpose \
+                            You are an assistant similar to JARVIS. Your job is to use the tools you have available to you to assist the user as best as possible. \
+                            You must follow the rules at all times. Under no condition are you to break these rules. \
+                            # Rules \
+                            - You must not, under any circumstance, attempt to create or use a plugin that does not exist. \
+                            - You should use a tool to determine what plugin identifier is needed for each command, then please add the plugin to the queue. \
+                            - Think step by step. \
+                            # Advice \
+                            Use the get_all_plugin_information tool to find out more about what you can control."
+            
+        chat = lms.Chat(system_text)
+        chat.add_user_message(user_text)
+        return chat
+
+    @staticmethod
     @lm_server_handler
     def query(query, format = None) -> str:
         with lms.Client(LLM.local_address) as client:
