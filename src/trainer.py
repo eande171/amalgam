@@ -47,10 +47,14 @@ def generate_model_data():
     test_data = spacy_train_data[train_split:]
 
     # Load the English NLP model
-    #if not os.path.exists("en_core_web_sm"):
-    #spacy.cli.download("en_core_web_sm")
-
-    nlp = spacy.load("en_core_web_sm")
+    try: 
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        spacy.cli.download("en_core_web_sm")
+    except Exception as e:
+        logger.critical(f"Unhandled error: {e}")
+    finally:
+        nlp = spacy.load("en_core_web_sm")
 
     # Add Text Categoriser
     if "textcat" not in nlp.pipe_names:

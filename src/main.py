@@ -49,7 +49,11 @@ def main():
     setup()
 
     if not Config.get_data("deafened"):
-        Input.setup()
+        try:
+            Input.setup()
+        except FileNotFoundError as e:
+            Config.set_data("deafened", True)
+            logger.warning(f"Defaulting to deafened mode as: {e}")
 
     Output.tts("Amalgam is ready to receive commands.", Output.GREEN)
 
