@@ -46,6 +46,56 @@ class Stop(Plugin):
     def get_description(self):
         return "This plugin stops the amalgam program when triggered"
     
+class AIConversation(Plugin):
+    def startup(self):
+        Output.tts("What would you like to talk about?")
+
+    def execute(self):
+        conversation = LLM.construct_chat(path.join(LLM_PROMPT_DIR, "converse.md"))
+
+        while True:
+            if idenfify_wakeword() or Config.get_data("deafened"):
+                text = Input.sst().lower()
+
+                if text in ["exit", "quit", "stop"]:
+                    break
+                if text == "":
+                    continue
+                else:
+                    conversation.add_user_message(text)
+                    response = LLM.query(conversation)
+                    conversation.add_assistant_response(response)
+
+                    Output.tts(str(response))
+
+    def shutdown(self):
+        Output.tts("Our conversation has finished.")
+
+    def get_identifier(self):
+        return "ai_conversation"
+
+    def register_commands(self):
+        return [
+            "I'd like to talk to you",
+            "I'd like to start a conversation",
+            "Start a conversation",
+            "Can I ask you a question?",
+            "I have a question.",
+            "Let's chat",
+            "Talk to me",
+            "Open a dialogue",
+            "Initiate conversation",
+            "Engage in conversation",
+            "Speak with you",
+            "I need to ask something",
+            "Query",
+            "Ask a question"
+        ]
+
+    def get_description(self):
+        return "This plugin allows you to have a conversation with the local LLM"
+
+
 class UseAI(Plugin):
     def startup(self):
         global using_ai
@@ -69,7 +119,7 @@ class UseAI(Plugin):
                         run_plugin_queue(plugin_queue)
 
                         plugin_queue.clear()
-                    else:
+                    elif text == "":
                         Output.tts("No search query provided.", Output.YELLOW)
             except KeyboardInterrupt:
                 Output.tts("Stopping LLM Usage.")
