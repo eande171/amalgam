@@ -8,26 +8,30 @@ class Config:
     _config_data = {}
     
     _default_config = {
-        "plugin_hash": "",              # Hash of Plugins Directory
-        "muted": False,                 # Can amalgam generate sounds
-        "deafened": False,              # Can Amalgam get input from the microphone 
-        "debug_logs": {
-            "console": False,           # Are debug logs printed to the console
-            "file": True                # Are debug logs saved to the log files
-        },
         "ai_enabled": False,            # Can Amalgam use LLMs
         "ai_config": {
             "port": "1234",             # Port to be used
             "model": "",                # Model to be used
             "log_conversation": False,  # Can Amalgam save AI conversations 
         },
+        "deafened": False,              # Can Amalgam get input from the microphone 
+        "debug_logs": {
+            "console": False,           # Are debug logs printed to the console
+            "file": True                # Are debug logs saved to the log files
+        },
+        "efficient_training": False,     # Selects between efficient and accurate training modes
         "ignore_words": [               # Ignore Words Commonly Misdetected During Silence. Only ignores word if it's alone.
             "the"
-        ]                       
+        ],
+        "ignore_plugin_module": [       # Prevents Plugin Modules being Loaded. Ignores LLMs by default
+            "llm"
+        ], 
+        "muted": False,                 # Can amalgam generate sounds
+        "plugin_hash": "",              # Hash of Plugins Directory
     }
 
     @staticmethod
-    def load_config(default: dict, config_path: str) -> dict:
+    def _load_config(default: dict, config_path: str) -> dict:
         """Load configuration from config.json or returns default values.
         
             Args:
@@ -44,7 +48,7 @@ class Config:
             try:
                 with open(config_path, "r") as file:
                     config = json.load(file)
-                    config = Config.merge_config(default, config)
+                    config = Config._merge_config(default, config)
 
                 with open(config_path, "w") as file:
                     file.write(json.dumps(config))
@@ -59,7 +63,7 @@ class Config:
         return config
 
     @staticmethod
-    def merge_config(default: dict, config: dict) -> dict:
+    def _merge_config(default: dict, config: dict) -> dict:
         """
         Merges two configuration dictionaries, with the second overriding the first.
 
@@ -73,7 +77,7 @@ class Config:
         merged = default.copy()
         for key, value in config.items():
             if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
-                merged[key] = Config.merge_config(merged[key], value)
+                merged[key] = Config._merge_config(merged[key], value)
             else:
                 merged[key] = value
         return merged
@@ -86,7 +90,7 @@ class Config:
         Args:
             config_path (str): Path to the configuration file.
         """
-        Config._config_data = Config.load_config(Config._default_config, config_path)
+        Config._config_data = Config._load_config(Config._default_config, config_path)
 
     @staticmethod
     def set_data(key: str, value: dict) -> None:

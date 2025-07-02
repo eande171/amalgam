@@ -99,10 +99,10 @@ class Output():
     @staticmethod
     def tts(text: str, colour: str = "\033[0m"):
         """Text to Speech"""
+        logger.info(f"Amalgam: {colour} {text}\033[0m")
         if Config.get_data("muted"):
             return
 
-        logger.info(f"Amalgam: {colour} {text}\033[0m")
         Output._tts_engine.say(text)
         Output._tts_engine.runAndWait()
 

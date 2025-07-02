@@ -5,6 +5,7 @@ import random
 import spacy
 from spacy.tokens import DocBin
 from src.plugin import PluginController
+from src.config import Config
 import logging
 
 logger = logging.getLogger(__name__)
@@ -88,12 +89,26 @@ def generate_model_data():
 def train_model():
     python_executable = sys.executable
 
+    if Config.get_data("efficient_training"):
+        optimise = "efficiency"
+    else:
+        optimise = "accuracy"
+
+        try: 
+            nlp = spacy.load("en_core_web_lg")
+        except OSError:
+            spacy.cli.download("en_core_web_lg")
+        except Exception as e:
+            logger.critical(f"Unhandled error: {e}")
+        finally:
+            nlp = spacy.load("en_core_web_lg")
+
     try:
         subprocess.run([
             python_executable, "-m", "spacy", "init", "config",
             "intent_model_data/config.cfg", "--lang", "en",
             "--pipeline", "textcat",
-            "--optimize", "efficiency", "--force"
+            "--optimize", optimise, "--force"
         ])
     except subprocess.CalledProcessError as e:
         logger.error(f"Error initializing config: {e}")
