@@ -19,7 +19,6 @@ class Config:
             "console": False,           # Are debug logs printed to the console
             "file": True                # Are debug logs saved to the log files
         },
-        "efficient_training": False,     # Selects between efficient and accurate training modes
         "ignore_words": [               # Ignore Words Commonly Misdetected During Silence. Only ignores word if it's alone.
             "the"
         ],
