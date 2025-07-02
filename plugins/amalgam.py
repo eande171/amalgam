@@ -75,6 +75,10 @@ class ReloadConfig(Plugin):
             "Bring in the new settings.",
             "Load the latest configuration.",
             "Rescan the config file.",
+            "Sync config from file.",
+            "Process config file.",
+            "Reinitialize config.",
+            "Reread the configuration file.",
         ]
 
     def get_description():
@@ -111,6 +115,16 @@ class SaveConfig(Plugin):
             "Make sure to save the settings.",
             "Put these changes into effect permanently.",
             "Ensure these settings are permanent.",
+            "Save configuration.",
+            "Write the config.",
+            "Persist the config.",
+            "Store the configuration.",
+            "Write settings.",
+            "Save the current state.",
+            "I need to save the config.",
+            "Don't lose these changes.",
+            "Make sure to save everything.",
+            "Can you write the configuration?",
         ]
 
     def get_description():
