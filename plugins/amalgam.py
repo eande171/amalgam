@@ -1,6 +1,8 @@
+import time
+
 from os import path
 
-from src.main import LLM_TOOL_DIR, LLM_PROMPT_DIR, idenfify_wakeword
+from src.main import LLM_TOOL_DIR, LLM_PROMPT_DIR, CONVERSATION_LOG_DIR, idenfify_wakeword
 from src.llm import LLM
 from src.plugin import Plugin, PluginController
 from src.speech_recognition.stt_tts import Input, Output
@@ -53,6 +55,8 @@ class AIConversation(Plugin):
     def execute(self):
         conversation = LLM.construct_chat(path.join(LLM_PROMPT_DIR, "converse.md"))
 
+        log_text = ""
+
         while True:
             if idenfify_wakeword() or Config.get_data("deafened"):
                 text = Input.sst().lower()
@@ -66,7 +70,21 @@ class AIConversation(Plugin):
                     response = LLM.query(conversation)
                     conversation.add_assistant_response(response)
 
+                    log_text += f"User: {text}\nAmalgam: {response}\n"
+
                     Output.tts(str(response))
+
+        if Config.get_nested_data(["ai_config", "log_conversation"]):
+            time_value = time.localtime()
+            time_string = time.strftime("%Y-%m-%d_%H-%M", time_value)
+
+            file_name = str(LLM.query(LLM.construct_chat(path.join(LLM_PROMPT_DIR, "file_name.md"), log_text)))
+            file_name += f"_{time_string}.log"
+
+            with open(path.join(CONVERSATION_LOG_DIR, file_name), "w") as file:
+                file.write("# -- Chat Logs -- #\n" + log_text)
+
+            print(f"Output saved to: {file_name}")
 
     def shutdown(self):
         Output.tts("Our conversation has finished.")

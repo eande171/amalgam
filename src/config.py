@@ -8,21 +8,22 @@ class Config:
     _config_data = {}
     
     _default_config = {
-        "plugin_hash": "",
-        "muted": False,
-        "deafened": False,
+        "plugin_hash": "",              # Hash of Plugins Directory
+        "muted": False,                 # Can amalgam generate sounds
+        "deafened": False,              # Can Amalgam get input from the microphone 
         "debug_logs": {
-            "console": False,
-            "file": True
+            "console": False,           # Are debug logs printed to the console
+            "file": True                # Are debug logs saved to the log files
         },
-        "ai_enabled": False,
+        "ai_enabled": False,            # Can Amalgam use LLMs
         "ai_config": {
-            "port": "1234",
-            "model": "",
+            "port": "1234",             # Port to be used
+            "model": "",                # Model to be used
+            "log_conversation": False,  # Can Amalgam save AI conversations 
         },
-        "ignore_words": [
+        "ignore_words": [               # Ignore Words Commonly Misdetected During Silence. Only ignores word if it's alone.
             "the"
-        ]    # Ignore Words Commonly Misdetected During Silence. Only ignores word if it's alone.
+        ]                       
     }
 
     @staticmethod
