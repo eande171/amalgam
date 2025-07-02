@@ -25,17 +25,20 @@ class PlayPause(Plugin):
             "Open media file.",
             "Play audio.",
             "Start video playback.",
-            "Begin audio playback.",
             "Start playing music.",
             "Play the music.",
             "Play me a song"
             "Play video.",
             "Toggle media playback.",
             "Toggle audio playback.",
-            "Toggle video playback.",
-            "Toggle music playback.",
-            "Toggle play/pause.",
             "Toggle media controls.",
+            "Resume the song.",
+            "Let's play.",
+            "Hit play.",
+            "Begin playing.",
+            "Can you play the media?",
+            "Please start playback.",
+            "I want to hear the music.",
         ]
 
     def get_description():
@@ -68,7 +71,18 @@ class Stop(Plugin):
             "End playback of this media.",
             "Halt current audio/video.",
             "Pause current media.",
-            "Pause the music."
+            "Pause the music.",
+            "Stop the music.",
+            "Stop the video.",
+            "End the song.",
+            "Cease playback.",
+            "Kill the music.",
+            "Shut off the media.",
+            "Stop the audio.",
+            "Stop the video playing.",
+            "Can you stop the current media?",
+            "Please stop playback.",
+            "I want the music to stop.",
         ]
 
     def get_description():
@@ -101,6 +115,13 @@ class NextTrack(Plugin):
             "Next media track.",
             "Advance to next song.",
             "Skip to next song.",
+            "Go to the next track.",
+            "Play the next song.",
+            "Forward to the next song.",
+            "Skip ahead.",
+            "Can you go to the next song?",
+            "Please play the one after.",
+            "I want to hear the next track.",
         ]
 
     def get_description():
@@ -133,6 +154,14 @@ class PrevTrack(Plugin):
             "Previous media track.",
             "Return to previous song.",
             "Skip to previous song.",
+            "Go back one track.",
+            "Play the previous song.",
+            "Back to the last song.",
+            "Rewind to the start of the track.",
+            "Can you go to the previous song?",
+            "Please play the one before.",
+            "I want to hear the last track again.",
+            "Let's listen to the previous one.",
         ]
 
     def get_description():
@@ -163,7 +192,16 @@ class VolumeUp(Plugin):
             "Make it louder.",
             "Volume up.",
             "Increase sound volume.",
-            "Raise audio level."
+            "Raise audio level.",
+            "Raise the volume.",
+            "Turn the volume up.",
+            "Louden the sound.",
+            "Make it more loud.",
+            "Boost the sound.",
+            "I need the volume to go up.",
+            "Volume, please go up.",
+            "Loudness up.",
+            "Raise the output sound.",
         ]
 
     def get_description():
@@ -194,7 +232,15 @@ class VolumeDown(Plugin):
             "Make it quieter.",
             "Volume down.",
             "Decrease sound volume.",
-            "Lower audio level."
+            "Lower audio level.",
+            "Lower the volume.",
+            "Turn the volume down.",
+            "Quiet down.",
+            "Make it less loud.",
+            "Soften the sound.",
+            "It's too loud, decrease the volume.",
+            "Make it a bit quieter.",
+            "Could you reduce the sound?",
         ]
 
     def get_description():

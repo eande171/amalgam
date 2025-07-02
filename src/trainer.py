@@ -10,7 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Get Sentence Data
 def generate_model_data():
     spacy_train_data = []
     all_labels = set()
@@ -48,14 +47,14 @@ def generate_model_data():
     test_data = spacy_train_data[train_split:]
 
     # Load the English NLP model
+    model = "en_core_web_md"
     try: 
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load(model)
     except OSError:
-        spacy.cli.download("en_core_web_sm")
+        spacy.cli.download(model)
+        nlp = spacy.load(model)
     except Exception as e:
         logger.critical(f"Unhandled error: {e}")
-    finally:
-        nlp = spacy.load("en_core_web_sm")
 
     # Add Text Categoriser
     if "textcat" not in nlp.pipe_names:
@@ -89,19 +88,18 @@ def generate_model_data():
 def train_model():
     python_executable = sys.executable
 
-    if Config.get_data("efficient_training"):
+    '''if Config.get_data("efficient_training"):
         optimise = "efficiency"
     else:
         optimise = "accuracy"
 
+        model = "en_core_web_lg"
         try: 
-            nlp = spacy.load("en_core_web_lg")
+            spacy.load(model)
         except OSError:
-            spacy.cli.download("en_core_web_lg")
+            spacy.cli.download(model)
         except Exception as e:
             logger.critical(f"Unhandled error: {e}")
-        finally:
-            nlp = spacy.load("en_core_web_lg")
 
     try:
         subprocess.run([
@@ -112,7 +110,7 @@ def train_model():
         ])
     except subprocess.CalledProcessError as e:
         logger.error(f"Error initializing config: {e}")
-        return
+        return'''
     
 
     try:
