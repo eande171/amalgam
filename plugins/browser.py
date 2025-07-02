@@ -36,7 +36,15 @@ class Search(Plugin):
             "Search online.",
             "Begin browser search.",
             "Activate browser search.",
-            "Open internet search."
+            "Open internet search.",
+            "Open the web browser for search.",
+            "Launch the search engine.",
+            "Go to web search.",
+            "Perform a web search.",
+            "Could you start a web search?",
+            "Open up the internet search for me.",
+            "Let's search the web.",
+            "I need to search for something.",
         ]
 
     def get_description():

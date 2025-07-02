@@ -28,7 +28,16 @@ class Stop(Plugin):
             "Shut down amalgam.",
             "Stop yourself.",
             "Shut yourself down.",
-            "Stop running"
+            "Stop running.",
+            "Go offline.",
+            "Cease operations.",
+            "Turn yourself off.",
+            "I need you to shut down.",
+            "Prepare for shutdown.",
+            "Initiate shutdown sequence.",
+            "Are you able to stop?",
+            "Power down now.",
+            "Completely shut down.",
         ]
 
     def get_description():
@@ -55,6 +64,17 @@ class ReloadConfig(Plugin):
             "Apply the changes from the config.",
             "Load the config into memory.",
             "Hot reload the config file."
+            "Reload Amalgam's config.",
+            "Refresh Amalgam's settings.",
+            "Update Amalgam's configuration.",
+            "Apply changes to Amalgam.",
+            "Please reload the config.",
+            "Can you refresh the configuration?",
+            "I need you to update the settings.",
+            "Make the config changes apply.",
+            "Bring in the new settings.",
+            "Load the latest configuration.",
+            "Rescan the config file.",
         ]
 
     def get_description():
@@ -81,11 +101,22 @@ class SaveConfig(Plugin):
             "Save the changes from the config.",
             "Save the config into memory.",
             "Make these changes permanent.",
+            "Save config file.",
+            "Save the settings.",
+            "Store the settings.",
+            "Write settings to file.",
+            "Save the current settings.",
+            "Please save the config.",
+            "Can you save the configuration?",
+            "Make sure to save the settings.",
+            "Put these changes into effect permanently.",
+            "Ensure these settings are permanent.",
         ]
 
     def get_description():
         return "This plugin saves the configuration file."
 
+'''
 class Deafen(Plugin):
     def startup():
         pass
@@ -112,7 +143,12 @@ class Deafen(Plugin):
             "Disable microphone input.",
             "Don't listen.",
             "Block audio input.",
-            "Stop picking up my voice."
+            "Stop picking up my voice.",
+            "Stop listening.",
+            "Deafen Amalgam.",
+            "Stop Amalgam from listening.",
+            "Turn off speech recognition.",
+            "Could you disable audio input?",
         ]
 
     def get_description():
@@ -149,12 +185,15 @@ class Undeafen(Plugin):
             "Enable audio input.",
             "Resume listening.",
             "I'm ready for you to hear me.",
-            "Undeafen."
+            "Undeafen.",
+            "Turn on speech recognition.",
+            "Start recognizing my voice.",
+            "Listen for my commands.",
+            "Come online.",
         ]
 
     def get_description():
         return "This plugin undeafens amalgam so it can use the microphone."
-    pass
 
 class Mute(Plugin):
     def startup():
@@ -176,6 +215,23 @@ class Mute(Plugin):
             "Hold your tongue.",
             "Don't speak.",
             "Cut the audio output.",
+            "Mute Amalgam.",
+            "Please be silent.",
+            "Stop talking.",
+            "Shut up.",
+            "Turn off your voice.",
+            "Disable your sound.",
+            "Can you go silent?",
+            "I need you to be quiet.",
+            "Silence the output.",
+            "No more sound.",
+            "Mute the audio.",
+            "Disable voice output.",
+            "Stop voice playback.",
+            "Turn off Amalgam's sound.",
+            "Disable Amalgam's audio.",
+            "Amalgam, be quiet.",
+            "Amalgam, shut up.",
             "Mute yourself",
         ]
 
@@ -202,11 +258,25 @@ class Unmute(Plugin):
             "Make some noise.",
             "Restore audio.",
             "Let me hear you.",
-            "Unmute yourself",
+            "Unmute Amalgam.",
+            "Please speak again.",
+            "Start talking.",
+            "Enable your voice.",
+            "Turn your sound back on.",
+            "Can you talk now?",
+            "I want to hear you.",
+            "Restore the audio output.",
+            "Allow sound.",
+            "Turn on your speech.",
+            "Enable voice output.",
+            "Begin voice playback.",
+            "Bring the sound back.",
         ]
 
     def get_description():
         return "This plugin unmutes amalgam so it starts producing sound."
+'''
+
 
 class Retrain(Plugin):
     def startup():
@@ -220,7 +290,7 @@ class Retrain(Plugin):
         train_model()
 
     def shutdown():
-        Output.tts("Amalgam has been retrained.")
+        pass
 
     def get_identifier():
         return "retrain"
@@ -234,6 +304,15 @@ class Retrain(Plugin):
             "Learn from new data.",
             "Recalibrate the intent model.",
             "Initiate intent training.",
+            "Train the model.",
+            "Retrain Amalgam's model.",
+            "Update the intent model.",
+            "Re-train the intent classifier.",
+            "Update the recognition model.",
+            "Refresh the recognition engine.",
+            "Can you retrain the model?",
+            "Please train the model again.",
+            "Redo the training"
         ]
 
     def get_description():
@@ -262,6 +341,14 @@ class ReloadPlugins(Plugin):
             "Rescan plugins.",
             "Apply plugin changes.",
             "Scan for new plugins.",
+            "Reload all plugins.",
+            "Refresh all extensions.",
+            "Update all add-ons.",
+            "Re-read plugins.",
+            "Force plugin reload.",
+            "Initiate plugin reload.",
+            "Can you reload the plugins?",
+            "Please refresh the extensions.",
         ]
 
     def get_description():
