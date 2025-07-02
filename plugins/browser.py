@@ -2,10 +2,10 @@ from src.plugin import Plugin
 from src.speech_recognition.stt_tts import Input, Output
 
 class Search(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("browsersearch")
 
@@ -18,14 +18,14 @@ class Search(Plugin):
             Output.tts("No search query provided.", Output.YELLOW)
 
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Search completed", Output.GREEN)
         pass
 
-    def get_identifier(self):
+    def get_identifier():
         return "browser_search"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Open browser search.",
             "Search the web.",
@@ -39,5 +39,5 @@ class Search(Plugin):
             "Open internet search."
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin opens the browser search using the system"

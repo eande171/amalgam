@@ -11,43 +11,44 @@ logger = logging.getLogger(__name__)
 # Plugin Class
 class Plugin(ABC):
     @abstractmethod
-    def startup(self):
+    def startup():
         """Runs when the plugin is loaded."""
         raise NotImplementedError("Plugin initialization not implemented.")
 
     @abstractmethod
-    def execute(self):
+    def execute():
         """Runs when the plugin is executed."""
         raise NotImplementedError("Plugin execution not implemented.")
 
     @abstractmethod
-    def shutdown(self):
+    def shutdown():
         """Runs when the plugin is stopped/program is shutdown."""
         raise NotImplementedError("Plugin shutdown not implemented.")
 
     @abstractmethod
-    def get_identifier(self) -> str:
+    def get_identifier() -> str:
         """Returns the unique identifier for the plugin."""
         raise NotImplementedError("Plugin identifier not implemented.")
 
     @abstractmethod
-    def register_commands(self) -> list[str]:
+    def register_commands() -> list[str]:
         """Returns a list of commands that the program registers ON TRAINING."""
         raise NotImplementedError("Plugin command registration not implemented.")
 
     @abstractmethod
-    def get_description(self) -> str:
+    def get_description() -> str:
         """Returns a human-readable/AI-readable description of the plugin."""
         raise NotImplementedError("Plugin description not implemented.")
 
 class PluginController:
-    active_plugin = None
+    active_plugin: Plugin = None
     identifiers = []
     plugins = {}
 
     @staticmethod
     def load_plugins():
         from src.main import PLUGINS_DIR
+        from src.config import Config
 
         if not path.exists(PLUGINS_DIR):
             logger.critical("Plugins directory is missing. Cannot load plugins.")
@@ -56,6 +57,10 @@ class PluginController:
         for file in listdir(PLUGINS_DIR):
             if file.endswith(".py") and not file == "__init__.py":
                 plugin_name = file[:-3]
+                
+                if plugin_name in Config.get_data("ignore_plugin_module"):
+                    continue
+                
                 logger.info(f"Loading plugin: {Output.BLUE} {plugin_name}")
 
                 module = import_module(f"plugins.{plugin_name}")
@@ -65,9 +70,9 @@ class PluginController:
                         if issubclass(obj, Plugin) and obj is not Plugin:
                             logger.info(f"Loading plugin:   {Output.BLUE} {name}{Output.RESET} from {obj}")
 
-                            PluginController.plugins[obj.get_identifier(obj)] = obj
+                            PluginController.plugins[obj.get_identifier()] = obj
 
-                            PluginController.identifiers.append(obj.get_identifier(obj))
+                            PluginController.identifiers.append(obj.get_identifier())
 
     @staticmethod
     def set_active_plugin(identifier):
@@ -79,35 +84,35 @@ class PluginController:
     @staticmethod    
     def get_active_identifier():
         if PluginController.active_plugin:
-            return PluginController.active_plugin.get_identifier(PluginController.active_plugin)
+            return PluginController.active_plugin.get_identifier()
         else:
             raise ValueError("No active plugin set.")
 
     @staticmethod    
     def get_active_description():
         if PluginController.active_plugin:
-            return PluginController.active_plugin.get_description(PluginController.active_plugin)
+            return PluginController.active_plugin.get_description()
         else:
             raise ValueError("No active plugin set.")
 
     @staticmethod    
     def active_startup():
         if PluginController.active_plugin:
-            PluginController.active_plugin.startup(PluginController.active_plugin)
+            PluginController.active_plugin.startup()
         else:
             raise ValueError("No active plugin set.")
 
     @staticmethod    
     def active_execute():
         if PluginController.active_plugin:
-            PluginController.active_plugin.execute(PluginController.active_plugin)
+            PluginController.active_plugin.execute()
         else:
             raise ValueError("No active plugin set.")
 
     @staticmethod    
     def active_shutdown():
         if PluginController.active_plugin:
-            PluginController.active_plugin.shutdown(PluginController.active_plugin)
+            PluginController.active_plugin.shutdown()
         else:
             raise ValueError("No active plugin set.")
 
@@ -125,6 +130,15 @@ class PluginController:
     @staticmethod
     def list_active_commands():
         if PluginController.active_plugin:
-            return PluginController.active_plugin.register_commands(PluginController.active_plugin)
+            return PluginController.active_plugin.register_commands()
         else:
             raise ValueError("No active plugin set.")
+        
+    @staticmethod
+    def reload_plugins():
+        PluginController.active_plugin = None
+        PluginController.identifiers.clear()
+        PluginController.plugins.clear()
+
+        PluginController.load_plugins()
+

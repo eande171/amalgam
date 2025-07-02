@@ -2,21 +2,21 @@ from src.plugin import Plugin
 from src.speech_recognition.stt_tts import Output
 
 class PlayPause(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         Output.tts("Media playback toggled.")
         pyautogui.press("playpause")
 
-    def shutdown(self):
+    def shutdown():
         pass
     
-    def get_identifier(self):
+    def get_identifier():
         return "media_play_pause"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Play media.",
             "Start media playback.",
@@ -38,24 +38,24 @@ class PlayPause(Plugin):
             "Toggle media controls.",
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin plays/pauses media (audio/video) using the system's media controls."
 
 class Stop(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("stop")
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Media playback stopped.")
 
-    def get_identifier(self):
+    def get_identifier():
         return "media_stop"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Stop current media.",
             "Stop playback.",
@@ -71,24 +71,24 @@ class Stop(Plugin):
             "Pause the music."
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin stops this media (audio/video) using the system's media controls."
 
 class NextTrack(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("nexttrack")
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Skipped to the next track.")
 
-    def get_identifier(self):
+    def get_identifier():
         return "media_track_next"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Skip to next track.",
             "Next song.",
@@ -103,24 +103,24 @@ class NextTrack(Plugin):
             "Skip to next song.",
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin skips this media (audio/video) using the system's media controls."
 
 class PrevTrack(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("prevtrack")
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Skipped to the previous track.")
 
-    def get_identifier(self):
+    def get_identifier():
         return "media_track_prev"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Skip to previous track.",
             "Previous song.",
@@ -135,24 +135,24 @@ class PrevTrack(Plugin):
             "Skip to previous song.",
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin skips to the previous media (audio/video) using the system's media controls."
 
 class VolumeUp(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("volumeup")
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Volume increased.")
 
-    def get_identifier(self):
+    def get_identifier():
         return "media_volume_up"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Increase volume.",
             "Raise volume level.",
@@ -166,24 +166,24 @@ class VolumeUp(Plugin):
             "Raise audio level."
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin increases the volume using the system's media controls."
     
 class VolumeDown(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         import pyautogui
         pyautogui.press("volumedown")
 
-    def shutdown(self):
+    def shutdown():
         Output.tts("Volume decreased.")
 
-    def get_identifier(self):
+    def get_identifier():
         return "media_volume_down"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Decrease volume.",
             "Lower volume level.",
@@ -197,5 +197,5 @@ class VolumeDown(Plugin):
             "Lower audio level."
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin decreases the volume using the system's media controls."

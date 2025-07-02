@@ -8,7 +8,6 @@ from os import path, listdir
 import lmstudio as lms
 
 from src.config import Config
-from src.speech_recognition.stt_tts import Output
 
 
 logger = logging.getLogger(__name__)

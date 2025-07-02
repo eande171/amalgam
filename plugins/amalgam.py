@@ -1,38 +1,24 @@
-import time
-
-from os import path
-
-from src.main import LLM_TOOL_DIR, LLM_PROMPT_DIR, CONVERSATION_LOG_DIR, idenfify_wakeword
-from src.llm import LLM
+from src.speech_recognition.stt_tts import Output
+from src.main import CONFIG_FILE, hash_check
 from src.plugin import Plugin, PluginController
-from src.speech_recognition.stt_tts import Input, Output
 from src.config import Config
 
-def run_plugin_queue(queue):
-    for plugin in queue:
-        PluginController.set_active_plugin(plugin)
-        PluginController.active_startup()
-        PluginController.active_execute()
-        PluginController.active_shutdown()
-
-using_ai = False
-
 class Stop(Plugin):
-    def startup(self):
+    def startup():
         pass
 
-    def execute(self):
+    def execute():
         print("Stopping amalgam...")
         Output.tts("Amalgam is shutting down.")
 
-    def shutdown(self):
+    def shutdown():
         import sys
         sys.exit(0)
 
-    def get_identifier(self):
+    def get_identifier():
         return "stop_self"
 
-    def register_commands(self):
+    def register_commands():
         return [
             "Stop amalgam.",
             "Terminate amalgam.",
@@ -45,157 +31,238 @@ class Stop(Plugin):
             "Stop running"
         ]
 
-    def get_description(self):
+    def get_description():
         return "This plugin stops the amalgam program when triggered"
-    
-class AIConversation(Plugin):
-    def startup(self):
-        Output.tts("What would you like to talk about?")
 
-    def execute(self):
-        conversation = LLM.construct_chat(path.join(LLM_PROMPT_DIR, "converse.md"))
-
-        log_text = ""
-
-        while True:
-            if idenfify_wakeword() or Config.get_data("deafened"):
-                text = Input.sst().lower()
-
-                if text in ["exit", "quit", "stop"]:
-                    break
-                if text == "":
-                    continue
-                else:
-                    conversation.add_user_message(text)
-                    response = LLM.query(conversation)
-                    conversation.add_assistant_response(response)
-
-                    log_text += f"User: {text}\nAmalgam: {response}\n"
-
-                    Output.tts(str(response))
-
-        if Config.get_nested_data(["ai_config", "log_conversation"]):
-            time_value = time.localtime()
-            time_string = time.strftime("%Y-%m-%d_%H-%M", time_value)
-
-            file_name = str(LLM.query(LLM.construct_chat(path.join(LLM_PROMPT_DIR, "file_name.md"), log_text)))
-            file_name += f"_{time_string}.log"
-
-            with open(path.join(CONVERSATION_LOG_DIR, file_name), "w") as file:
-                file.write("# -- Chat Logs -- #\n" + log_text)
-
-            print(f"Output saved to: {file_name}")
-
-    def shutdown(self):
-        Output.tts("Our conversation has finished.")
-
-    def get_identifier(self):
-        return "ai_conversation"
-
-    def register_commands(self):
-        return [
-            "I'd like to talk to you",
-            "I'd like to start a conversation",
-            "Start a conversation",
-            "Can I ask you a question?",
-            "I have a question.",
-            "Let's chat",
-            "Talk to me",
-            "Open a dialogue",
-            "Initiate conversation",
-            "Engage in conversation",
-            "Speak with you",
-            "I need to ask something",
-            "Query",
-            "Ask a question"
-        ]
-
-    def get_description(self):
-        return "This plugin allows you to have a conversation with the local LLM"
-
-
-class UseAI(Plugin):
-    def startup(self):
-        global using_ai
-        using_ai = True
-        Output.tts("AI Mode Activated.")
-    
-    def execute(self):
-        global using_ai
-        from llm_data.tools.plugins import plugin_queue
-
-        plugin_queue.clear()
-        while using_ai:
-            try:
-                if idenfify_wakeword() or Config.get_data("deafened"):
-                    text = Input.sst().lower()
-                    if text:
-                        # LLM.query_with_tools("For the following input, use a tool to determine what plugin identifier is needed for each command? Then please add the plugin to the queue. Think step by step. Input: " + text, LLM.get_tools(LLM_TOOL_DIR))
-                        LLM.query_with_tools(LLM.construct_chat(path.join(LLM_PROMPT_DIR, "default.md"), text), LLM.get_tools(LLM_TOOL_DIR))
-
-                        print(plugin_queue)
-                        run_plugin_queue(plugin_queue)
-
-                        plugin_queue.clear()
-                    elif text == "":
-                        Output.tts("No search query provided.", Output.YELLOW)
-            except KeyboardInterrupt:
-                Output.tts("Stopping LLM Usage.")
-                break
-
-        PluginController.set_active_plugin("use_ai")
-    
-    def shutdown(self):
-        global using_ai
-        using_ai = False
-    
-    def get_identifier(self):
-        return "use_ai"
-    
-    def register_commands(self):
-        return [
-            "I'd like to use AI.",
-            "Start AI mode.",
-            "Enable AI for plugins.",
-            "Can you enable AI for me?",
-            "Please switch to AI-powered plugin execution.",
-            "Let's use AI for running plugins.",
-            "Turn on AI capabilities.",
-            "Use AI from now on.",
-            "Use AI",
-        ]
-    
-    def get_description(self):
-        return "This plugin will force amalgam to use AI (LLM + tools) to run the plugins from now on."
-    
-class RetireAI(Plugin):
-    def startup(self):
+class ReloadConfig(Plugin):
+    def startup():
         pass
-    
-    def execute(self):
-        global using_ai
-        if using_ai:
-            Output.tts("Disabling AI...")
-            using_ai = False
-        else:
-            Output.tts("AI is not active.")
-            
-    def shutdown(self):
-        pass
-    
-    def get_identifier(self):
-        return "retire_ai"
-    
-    def register_commands(self):
+
+    def execute():
+        print("Reloading Config...")
+        Config.init(CONFIG_FILE)
+
+    def shutdown():
+        Output.tts("Amalgam has reloaded the configuration file.")
+
+    def get_identifier():
+        return "reload_config"
+
+    def register_commands():
         return [
-            "I'd like to stop using AI.",
-            "Disable AI mode.",
-            "Turn off AI for plugins.",
-            "Can you disable AI for me?",
-            "Please switch off AI-powered plugin execution.",
-            "Let's stop using AI for running plugins.",
-            "Turn off AI capabilities."
+            "Reload the config.",
+            "Refresh the config.",
+            "Apply the changes from the config.",
+            "Load the config into memory.",
+            "Hot reload the config file."
         ]
+
+    def get_description():
+        return "This plugin reloads the configuration file so that changes to the config apply to the whole program."
     
-    def get_description(self):
-        return "This plugin will stop amalgam from using AI (LLM + tools) to run the plugins from now on."
+class SaveConfig(Plugin):
+    def startup():
+        pass
+
+    def execute():
+        print("Saving current state to Config...")
+        Config.save_data(CONFIG_FILE)
+
+    def shutdown():
+        Output.tts("Amalgam has saved the configuration file.")
+
+    def get_identifier():
+        return "save_config"
+
+    def register_commands():
+        return [
+            "Save the config.",
+            "Save changes to the config.",
+            "Save the changes from the config.",
+            "Save the config into memory.",
+            "Make these changes permanent.",
+        ]
+
+    def get_description():
+        return "This plugin saves the configuration file."
+
+class Deafen(Plugin):
+    def startup():
+        pass
+
+    def execute():
+        Config.set_data("deafened", True)
+
+    def shutdown():
+        Output.tts("Amalgam has been deafened.")
+
+    def get_identifier():
+        return "deafen"
+
+    def register_commands():
+        return [
+            "Stop listening to me.",
+            "I don't want you listening anymore.",
+            "Deafen yourself.",
+            "Mute microphone.",
+            "Turn off mic.",
+            "Disable microphone."
+            "Go deaf.",
+            "Cease listening.",
+            "Disable microphone input.",
+            "Don't listen.",
+            "Block audio input.",
+            "Stop picking up my voice."
+        ]
+
+    def get_description():
+        return "This plugin deafens amalgam so it no longer uses the microphone."
+
+class Undeafen(Plugin):
+    def startup():
+        pass
+
+    def execute():
+        Config.set_data("deafened", False)
+
+    def shutdown():
+        Output.tts("Amalgam has been undeafened.")
+
+    def get_identifier():
+        return "undeafen"
+
+    def register_commands():
+        return [
+            "Start listening to me.",
+            "I want you listening again.",
+            "Undeafen yourself.",
+            "Unmute microphone.",
+            "Turn on mic.",
+            "Enable microphone."
+            "Hear me.",
+            "Enable microphone input.",
+            "Listen again.",
+            "Unblock audio input.",
+            "Start picking up my voice.",
+            "Wake up.",
+            "Listen closely.",
+            "Enable audio input.",
+            "Resume listening.",
+            "I'm ready for you to hear me.",
+            "Undeafen."
+        ]
+
+    def get_description():
+        return "This plugin undeafens amalgam so it can use the microphone."
+    pass
+
+class Mute(Plugin):
+    def startup():
+        pass
+
+    def execute():
+        Config.set_data("muted", True)
+
+    def shutdown():
+        Output.tts("Amalgam has been muted.")
+
+    def get_identifier():
+        return "mute"
+
+    def register_commands():
+        return [
+            "Silence yourself.",
+            "Go quiet.",
+            "Hold your tongue.",
+            "Don't speak.",
+            "Cut the audio output.",
+            "Mute yourself",
+        ]
+
+    def get_description():
+        return "This plugin mutes amalgam so it no longer produces sound."
+
+class Unmute(Plugin):
+    def startup():
+        pass
+
+    def execute():
+        Config.set_data("muted", False)
+
+    def shutdown():
+        Output.tts("Amalgam has been unmuted.")
+
+    def get_identifier():
+        return "unmute"
+
+    def register_commands():
+        return [
+            "Speak up.",
+            "Talk to me.",
+            "Make some noise.",
+            "Restore audio.",
+            "Let me hear you.",
+            "Unmute yourself",
+        ]
+
+    def get_description():
+        return "This plugin unmutes amalgam so it starts producing sound."
+
+class Retrain(Plugin):
+    def startup():
+        Output.tts("Retraining intent recognition.")
+
+    def execute():
+        from src.trainer import train_model, generate_model_data
+
+        hash_check()
+        generate_model_data()
+        train_model()
+
+    def shutdown():
+        Output.tts("Amalgam has been retrained.")
+
+    def get_identifier():
+        return "retrain"
+
+    def register_commands():
+        return [
+            "Retrain the model.",
+            "Refresh intent data.",
+            "Rebuild intent recognition.",
+            "Train again.",
+            "Learn from new data.",
+            "Recalibrate the intent model.",
+            "Initiate intent training.",
+        ]
+
+    def get_description():
+        return "This plugin retrains amalgam's intent recognition model."
+
+class ReloadPlugins(Plugin):
+    def startup():
+        Output.tts("Reloading Amalgam's plugins.")
+
+    def execute():
+        PluginController.reload_plugins()
+        PluginController.set_active_plugin("reload_plugins")
+
+    def shutdown():
+        Output.tts("Amalgam's plugins have been reloaded.")
+
+    def get_identifier():
+        return "reload_plugins"
+
+    def register_commands():
+        return [
+            "Reload plugins.",
+            "Refresh extensions.",
+            "Restart modules.",
+            "Update add-ons.",
+            "Rescan plugins.",
+            "Apply plugin changes.",
+            "Scan for new plugins.",
+        ]
+
+    def get_description():
+        return "This plugin reloads amalgam's plugins. Note that it does not retrain anything."
