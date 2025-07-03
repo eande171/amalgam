@@ -1,7 +1,8 @@
 from os import path, makedirs
-from time import sleep
 from dirhash import dirhash
+from time import sleep
 import logging
+import json
 
 from openwakeword.model import Model
 from openwakeword.utils import download_models
@@ -11,9 +12,11 @@ import numpy as np
 
 import spacy
 
+from llm_data.tools.plugins import get_all_plugin_information
 from src.speech_recognition.stt_tts import Input, Output
-from src.config import Config
 from src.logger import setup_logging
+from src.config import Config
+from src.llm import LLM
 
 # Constants
 SOURCE_DIR = path.dirname(path.abspath(__file__))
@@ -143,8 +146,14 @@ def identify_command(command: str) -> str:
     confidence = max(doc.cats, key=doc.cats.get)
 
     logger.info(f"Identified command: {confidence} with confidence value: {doc.cats[confidence]}")
-    if doc.cats[confidence] > 0.5:
+    if doc.cats[confidence] > Config.get_data("confidence_threshold"):
         return confidence
+    elif Config.get_nested_data(["ai_config", "llm_recognition"]):
+        chat = LLM.construct_chat(path.join(LLM_PROMPT_DIR, "identify.md"), command)
+        chat.add_system_prompt(f"You have the following plugins available: {str(get_all_plugin_information())}")
+
+        ai_confidence = str(LLM.query(chat))
+        return json.loads(ai_confidence)["identifier"]
     else:
         return "unknown"
 
