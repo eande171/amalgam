@@ -1,3 +1,6 @@
+
+<img src="./amalgam.svg" width="25%">
+
 # AMALGAM
 **A**utonomous
 **M**odular 
@@ -49,6 +52,27 @@ Running **Amalgam** for the first time requires an internet connection. This wil
  
 **Amalgam** requires you to have a VOSK model installed in the `src/speech_recognition/model` directory. VOSK models can be obtained [here](https://alphacephei.com/vosk/models). I recommend at least: [vosk-model-en-us-0.22-lgraph](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) which can be understood by **Amalgam** with decent accuracy. Obviously, the higher the model, the more accurate speech recognition, at the cost of higher RAM usage. 
 
+# Using LLMs 
+**NOTE:** Using (local) Large Language Models is **entirely optional** and not required for **Amalgam** to function. They can, however, improve the quality of the program/your experience.
+
+**Amalgam** uses [LM Studio](https://lmstudio.ai/) as the backend and requires models to be installed either through their (LM Studio's) CLI or through the desktop application. For amalgam to load the model you'd like to use, you need to include it in `user_data/config.json`. My config for AI looks similar to the following (without comments):
+```python
+"ai_enabled": true,                   # This must be enabled for any AI usage (IMPORTANT)
+"ai_config": {
+    "port": "1234",                   # The localhost port running the LLM server
+    "model": "qwen2.5-7b-instruct",   # The default identifier used by LM Studio (IMPORTANT)
+    "log_conversation": true          # Can a conversation be saved to a file
+    "llm_recognition": true           # Can the LLM be used if intent recognition fails
+}
+```
+You can choose whichever model you like, making sure to update the config to use the model, although I recommend one with at least 7 billion parameters. The server will start automatically if AI is invoked and will close after it is no longer required. Occasionally, the server may fail to close. If AI is used again, it should resolve this issue. Otherwise, the server can be closed through the LM Studio GUI or by running `lms server stop`.
+
+There are also some LLM plugins which have been disabled by default. This includes both a conversation plugin  and "Use AI" plugin. The conversation plugin allows you to have a conversation with it, just like any other LLM. The output will be saved to `user_data/conversation_log` if `"log_conversation"` is set to True. 
+
+The "Use AI" plugin skips the default intent recognition and uses AI for everything. I don't personally recommend it as it is generally unnecessary but the option to enable it is there. **NOTE:** The "Use AI" plugin requires you have an LLM that is trained for tools. It **will NOT** work correctly without it. 
+
+To enable the LLM module, go to `user_data/config.json` and remove `"llm"` from `"ignore_plugin_module"`
+
 # Running Amalgam
 Simple steps to run **Amalgam**:
 ```batch
@@ -56,4 +80,11 @@ cd amalgam
 .\venv\Scripts\activate
 python -m src.main
 ```
+
+# Using Amalgam
+1. Say the wake word `hey jarvis` (just like "hey google" or "hey siri"), Amalgam will indicate it is listening.
+2. Give it an instruction like: `play me some music` or `search the web`.
+
+That's it! 
+
 For a list of current features, information on creating custom plugins / AI tools, check the [wiki](https://github.com/eande171/amalgam/wiki).
