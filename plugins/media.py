@@ -27,11 +27,10 @@ class PlayPause(Plugin):
             "Start video playback.",
             "Start playing music.",
             "Play the music.",
-            "Play me a song"
+            "Play me a song.",
+            "Play me some music.",
             "Play video.",
             "Toggle media playback.",
-            "Toggle audio playback.",
-            "Toggle media controls.",
             "Resume the song.",
             "Let's play.",
             "Hit play.",
