@@ -5,7 +5,6 @@ import random
 import spacy
 from spacy.tokens import DocBin
 from src.plugin import PluginController
-from src.config import Config
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ def generate_model_data():
             cats[identifier] = True
             spacy_train_data.append((command, {"cats": cats}))
 
-    # print("Data: ", spacy_train_data)
+    PluginController.active_plugin = None
 
     updated_spacy_train_data = []
     for text, annotations in spacy_train_data:
@@ -36,8 +35,6 @@ def generate_model_data():
         updated_spacy_train_data.append((text, {"cats": full_cats}))
 
     spacy_train_data = updated_spacy_train_data
-
-    # print("Data New: ", spacy_train_data)
 
     # Prepare Training and Test Data
     random.shuffle(spacy_train_data)
@@ -86,32 +83,7 @@ def generate_model_data():
 
 # Train the model
 def train_model():
-    python_executable = sys.executable
-
-    '''if Config.get_data("efficient_training"):
-        optimise = "efficiency"
-    else:
-        optimise = "accuracy"
-
-        model = "en_core_web_lg"
-        try: 
-            spacy.load(model)
-        except OSError:
-            spacy.cli.download(model)
-        except Exception as e:
-            logger.critical(f"Unhandled error: {e}")
-
-    try:
-        subprocess.run([
-            python_executable, "-m", "spacy", "init", "config",
-            "intent_model_data/config.cfg", "--lang", "en",
-            "--pipeline", "textcat",
-            "--optimize", optimise, "--force"
-        ])
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error initializing config: {e}")
-        return'''
-    
+    python_executable = sys.executable 
 
     try:
         subprocess.run([

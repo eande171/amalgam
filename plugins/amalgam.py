@@ -303,8 +303,10 @@ class Retrain(Plugin):
         generate_model_data()
         train_model()
 
+        PluginController.set_active_plugin("retrain")
+
     def shutdown():
-        pass
+        Output.tts("Training is complete.")
 
     def get_identifier():
         return "retrain"
