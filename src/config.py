@@ -13,7 +13,9 @@ class Config:
             "port": "1234",             # Port to be used
             "model": "",                # Model to be used
             "log_conversation": False,  # Can Amalgam save AI conversations 
+            "llm_recognition": True,    # Can AI be used to identify intent if intent recognition fails
         },
+        "confidence_threshold": 0.5,
         "deafened": False,              # Can Amalgam get input from the microphone 
         "debug_logs": {
             "console": False,           # Are debug logs printed to the console
@@ -24,7 +26,7 @@ class Config:
         ],
         "ignore_plugin_module": [       # Prevents Plugin Modules being Loaded. Ignores LLMs by default
             "llm"
-        ], 
+        ],        
         "muted": False,                 # Can amalgam generate sounds
         "plugin_hash": "",              # Hash of Plugins Directory
     }
