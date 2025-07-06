@@ -15,6 +15,7 @@ class Config:
             "log_conversation": False,  # Can Amalgam save AI conversations 
             "llm_recognition": True,    # Can AI be used to identify intent if intent recognition fails
         },
+        "balancing" : True,             # Will dynamic balancing be applied to the model training?
         "confidence_threshold": 0.5,
         "deafened": False,              # Can Amalgam get input from the microphone 
         "debug_logs": {
